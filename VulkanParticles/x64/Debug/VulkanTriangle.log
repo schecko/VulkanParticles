@@ -1,0 +1,21 @@
+﻿  win64_vulkantriangle.cpp
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(28): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(29): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(31): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(32): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(88): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(90): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\win64_vulkantriangle.cpp(147): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+  Generating Code...
+  Compiling...
+  surface.cpp
+  commonwindows.cpp
+d:\scottsdocs\sourcecode\vulkantriangle\code\commonwindows.cpp(156): warning C4244: 'initializing': conversion from 'LONGLONG' to 'uint32_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\commonwindows.cpp(209): warning C4244: '+=': conversion from 'const float' to 'uint64_t', possible loss of data
+d:\scottsdocs\sourcecode\vulkantriangle\code\commonwindows.cpp(246): warning C4244: 'initializing': conversion from 'int64_t' to 'int32_t', possible loss of data
+  commonvulkan.cpp
+d:\scottsdocs\sourcecode\vulkantriangle\code\commonvulkan.cpp(743): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+  camera.cpp
+  Generating Code...
+  VulkanTriangle.vcxproj -> D:\scottsdocs\sourcecode\VulkanTriangle\VulkanTriangle\x64\Debug\VulkanTriangle.exe
+  VulkanTriangle.vcxproj -> D:\scottsdocs\sourcecode\VulkanTriangle\VulkanTriangle\x64\Debug\VulkanTriangle.pdb (Partial PDB)
