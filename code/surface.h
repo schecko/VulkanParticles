@@ -13,8 +13,13 @@ struct DeviceInfo;
 struct SurfaceInfo
 {
 	VkSurfaceKHR surface;
+	uint32_t renderingQueueFamilyIndex;
 	VkColorSpaceKHR colorSpace;
 	VkFormat colorFormat;
+};
+
+struct SwapchainInfo
+{
 	uint32_t imageCount;
 	std::vector<VkImage> images;
 	std::vector<VkImageView> views;
@@ -29,7 +34,7 @@ uint32_t FindGraphicsQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfa
 void GetSurfaceColorSpaceAndFormat(VkPhysicalDevice physicalDevice,
 	SurfaceInfo* surfaceInfo);
 
-void InitSwapChain(
+SwapchainInfo NewSwapchainInfo(
 	const DeviceInfo* deviceInfo,
 	VkPhysicalDevice physDevice,
 	SurfaceInfo* surfaceInfo,

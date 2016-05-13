@@ -234,7 +234,7 @@ VkDescriptorSet NewDescriptorSet(VkDevice logicalDevice, const PipelineInfo* pip
 
 }
 
-void BuildCmdBuffers(const DeviceInfo* deviceInfo,  const PipelineInfo* pipelineInfo, const SurfaceInfo* surfaceInfo, const VertexBuffer* vertexBuffer, uint32_t clientWidth, uint32_t clientHeight)
+void BuildCmdBuffers(const DeviceInfo* deviceInfo,  const PipelineInfo* pipelineInfo, const SwapchainInfo* swapchainInfo, const VertexBuffer* vertexBuffer, uint32_t clientWidth, uint32_t clientHeight)
 {
 	VkCommandBufferBeginInfo cbInfo = {};
 	cbInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -305,7 +305,7 @@ void BuildCmdBuffers(const DeviceInfo* deviceInfo,  const PipelineInfo* pipeline
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
-		barrier.image = surfaceInfo->images[i];
+		barrier.image = swapchainInfo->images[i];
 		
 		vkCmdPipelineBarrier(currCmd,
 			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
@@ -326,7 +326,7 @@ void Init(MainMemory* m)
 
     m->consoleHandle = GetConsoleWindow();
     //ShowWindow(m->consoleHandle, SW_HIDE);
-	m->camera.cameraPos = NewCameraPos();
+	m->camera = NewCamera();
 	m->timerInfo = NewTimerInfo();
 
     m->windowInfo = NewWindowInfo(EXE_NAME, &m->input, 1200, 800);
@@ -339,17 +339,12 @@ void Init(MainMemory* m)
 	{
 		m->debugInfo.instanceLayerList.push_back(layerProps[i].layerName);
 	}
-#else
-	m->debugInfo.instanceLayerList.push_back("VK_LAYER_LUNARG_swapchain");
-#endif
-	//required for function GetPhysicalDeviceSurfaceSupportKHR
-	m->debugInfo.instanceExtList.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	//required for function vkCreateWin32SurfaceKHR 
-	m->debugInfo.instanceExtList.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#if VALIDATION_LAYERS
-	//required for createdebugreportcallback function
 	m->debugInfo.instanceExtList.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
+	m->debugInfo.instanceExtList.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+	//m->debugInfo.instanceExtList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	m->debugInfo.instanceExtList.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+
 
     m->vkInstance = NewVkInstance(EXE_NAME, &m->debugInfo.instanceLayerList, &m->debugInfo.instanceExtList);
 #if VALIDATION_LAYERS
@@ -374,7 +369,7 @@ void Init(MainMemory* m)
     std::vector<VkLayerProperties> layerPropsDevice = GetInstalledVkLayers(m->physDeviceInfo.physicalDevice);
     for (uint32_t i = 0; i < layerPropsDevice.size(); i++)
     {
-        m->debugInfo.deviceLayerList.push_back(layerPropsDevice[i].layerName);
+        //m->debugInfo.deviceLayerList.push_back(layerPropsDevice[i].layerName);
     }
 #else
 		m->debugInfo.deviceLayerList.push_back("VK_LAYER_LUNARG_swapchain");
@@ -389,12 +384,6 @@ void Init(MainMemory* m)
     m->deviceInfo.presentComplete = NewSemaphore(m->deviceInfo.device);
     m->deviceInfo.renderComplete = NewSemaphore(m->deviceInfo.device);
 
-    m->deviceInfo.submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    m->deviceInfo.submitInfo.pWaitDstStageMask = (VkPipelineStageFlags*)VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    m->deviceInfo.submitInfo.waitSemaphoreCount = 1;
-    m->deviceInfo.submitInfo.pWaitSemaphores = &m->deviceInfo.presentComplete;
-    m->deviceInfo.submitInfo.signalSemaphoreCount = 1;
-    m->deviceInfo.submitInfo.pSignalSemaphores = &m->deviceInfo.renderComplete;
 
 
     GetSurfaceColorSpaceAndFormat(m->physDeviceInfo.physicalDevice,
@@ -408,6 +397,8 @@ void Init(MainMemory* m)
 		&m->physDeviceInfo,
 		m->windowInfo.clientWidth,
 		m->windowInfo.clientHeight);
+
+
 
 	m->pipelineInfo.renderPass = NewRenderPass(m->deviceInfo.device, 
 		m->surfaceInfo.colorFormat, 
@@ -619,7 +610,7 @@ int main(int argv, char** argc)
 		Update(m);
         Render(&m->deviceInfo, &m->surfaceInfo);
 		Tock(&m->timerInfo);
-		Sleep(&m->timerInfo, 30);
+		Sleep(&m->timerInfo, 60);
     }
     Quit(m);
     delete m;

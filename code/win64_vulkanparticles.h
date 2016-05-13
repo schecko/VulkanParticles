@@ -13,7 +13,7 @@
 static const char* EXE_NAME = "VulkanTriangle";
 static const uint32_t VERTEX_BUFFER_BIND_ID = 0;
 static const float CAMERA_SPEED = 0.001f;
-#define VALIDATION_LAYERS false
+#define VALIDATION_LAYERS true
 #define VALIDATION_MESSAGES false
 #define DEBUGGING true
 

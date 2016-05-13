@@ -33,7 +33,6 @@ struct StagingBuffers
 struct PhysDeviceInfo
 {
 	VkPhysicalDevice physicalDevice;
-	uint32_t renderingQueueFamilyIndex;
 	VkFormat supportedDepthFormat;
 
 	VkPhysicalDeviceFeatures deviceFeatures;
@@ -59,7 +58,7 @@ struct DeviceInfo
 	std::vector<VkCommandBuffer> drawCmdBuffers;
 	std::vector<VkFramebuffer> frameBuffers;
 
-	DepthStencil depthStencil; //TODO would this be better in the surfaceinfo struct?
+	DepthStencil depthStencil;
 };
 
 struct PipelineInfo
@@ -82,6 +81,12 @@ struct DebugInfo
 	std::vector<const char*> deviceLayerList;
 	std::vector<const char*> deviceExtList;
 	VkDebugReportCallbackEXT debugReport;
+};
+
+enum VkExtension
+{
+	noExtension,
+
 };
 
 void CreateDebugCallback(VkInstance vkInstance, VkDebugReportCallbackEXT* debugReport);

@@ -71,14 +71,14 @@ void PrepareCameraBuffers(VkDevice logicalDevice,
 	UpdateCamera(logicalDevice, *camera, width, height);
 }
 
-CameraPos NewCameraPos(glm::vec3 initalPosition)
+Camera NewCamera(glm::vec3 initalPosition)
 {
-	CameraPos cameraPos = {};
-	cameraPos.position = initalPosition;
-	cameraPos.worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	cameraPos.yaw = -PI / 2;
-	cameraPos.pitch = 0.0f;
-	cameraPos.zoom = PI / 6;
+	Camera camera = {};
+	camera.cameraPos.position = initalPosition;
+	camera.cameraPos.worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	camera.cameraPos.yaw = -PI / 2;
+	camera.cameraPos.pitch = 0.0f;
+	camera.cameraPos.zoom = PI / 6;
 
-	return cameraPos;
+	return camera;
 }

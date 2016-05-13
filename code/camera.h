@@ -53,4 +53,4 @@ void PrepareCameraBuffers(VkDevice logicalDevice,
 
 void UpdateCamera(VkDevice logicalDevice, Camera& camera, uint32_t width, uint32_t height);
 
-CameraPos NewCameraPos(glm::vec3 initalPosition = glm::vec3(0.0f, 0.0f, 10.0f));
+Camera NewCamera(glm::vec3 initalPosition = glm::vec3(0.0f, 0.0f, 10.0f));

@@ -127,7 +127,7 @@
     <ClCompile Include="..\code\commonwindows.cpp" />
     <ClCompile Include="..\code\surface.cpp" />
     <ClCompile Include="..\code\timer.cpp" />
-    <ClCompile Include="..\code\win64_vulkantriangle.cpp" />
+    <ClCompile Include="..\code\win64_vulkanparticles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\code\camera.h" />
@@ -136,7 +136,7 @@
     <ClInclude Include="..\code\surface.h" />
     <ClInclude Include="..\code\timer.h" />
     <ClInclude Include="..\code\util.h" />
-    <ClInclude Include="..\code\win64_vulkantriangle.h" />
+    <ClInclude Include="..\code\win64_vulkanparticles.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

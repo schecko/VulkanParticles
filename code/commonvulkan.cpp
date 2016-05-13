@@ -110,10 +110,51 @@ VkPipelineLayout NewPipelineLayout(VkDevice logicalDevice, VkDescriptorSetLayout
 	return pipelinelayout;
 }
 
+VkInstance NewVkInstance(const char* appName)
+{
+	VkResult error;
+	VkInstance vkInstance;
+	std::vector<const char*> extensions, layers;
+	extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME); //required for pretty much all other extensions
+	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	
+	//layers = GetInstalledVkLayers();
+
+	VkApplicationInfo appInfo = {};
+	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	appInfo.pApplicationName = appName;
+	appInfo.pEngineName = appName;
+	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 8);
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 8);
+
+	VkInstanceCreateInfo instanceCreateInfo = {};
+	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	instanceCreateInfo.pApplicationInfo = &appInfo;
+
+#if(VALIDATION_LAYERS)
+	//instanceCreateInfo.enabledLayerCount = (uint32_t)instanceLayers->size();
+	//instanceCreateInfo.ppEnabledLayerNames = instanceLayers->data();
+#endif
+
+	//instanceCreateInfo.enabledExtensionCount = (uint32_t)instanceExts->size();
+	//instanceCreateInfo.ppEnabledExtensionNames = instanceExts->data();
+
+
+
+	error = vkCreateInstance(&instanceCreateInfo, nullptr, &vkInstance);
+
+	Assert(error == VK_SUCCESS, "could not create instance of vulkan");
+
+#if VALIDATION_LAYERS
+	GET_VULKAN_FUNCTION_POINTER_INST(vkInstance, CreateDebugReportCallbackEXT);
+	GET_VULKAN_FUNCTION_POINTER_INST(vkInstance, DestroyDebugReportCallbackEXT);
+#endif
+
+	return vkInstance;
+}
 
 VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceLayers, std::vector<const char*>* instanceExts)
 {
-
 	VkResult error;
 	VkInstance vkInstance;
 
@@ -167,7 +208,33 @@ std::vector<VkPhysicalDevice> EnumeratePhysicalDevices(VkInstance vkInstance, ui
 	return physicalDevices;
 }
 
+PhysDeviceInfo NewPhysDeviceInfo(VkInstance vkInstance)
+{
+	uint32_t gpuCount;
+	PhysDeviceInfo* physDeviceInfo = {};
+	std::vector<VkPhysicalDevice> physicalDevices = EnumeratePhysicalDevices(vkInstance, &gpuCount);
+	physDeviceInfo->physicalDevice = physicalDevices[0];
+	vkGetPhysicalDeviceFeatures(physDeviceInfo->physicalDevice, &physDeviceInfo->deviceFeatures);
+	vkGetPhysicalDeviceMemoryProperties(physDeviceInfo->physicalDevice, &physDeviceInfo->memoryProperties);
+	physDeviceInfo->supportedDepthFormat = GetSupportedDepthFormat(physDeviceInfo->physicalDevice);
+	return *physDeviceInfo;
+}
 
+DeviceInfo NewDeviceInfo(const SurfaceInfo* surfaceInfo, const PhysDeviceInfo* physDeviceInfo, const WindowInfo* windowInfo, const DebugInfo* debugInfo = nullptr)
+{
+	DeviceInfo* deviceInfo = {};
+
+	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, debugInfo->deviceLayerList, debugInfo->deviceExtList);
+	vkGetDeviceQueue(deviceInfo->device, surfaceInfo->renderingQueueFamilyIndex, 0, &deviceInfo->queue);
+
+	deviceInfo->presentComplete = NewSemaphore(deviceInfo->device);
+	deviceInfo->renderComplete = NewSemaphore(deviceInfo->device);
+
+	deviceInfo->cmdPool = NewCommandPool(deviceInfo->device, surfaceInfo->renderingQueueFamilyIndex);
+	deviceInfo->setupCmdBuffer = NewCommandBuffer(deviceInfo->device, deviceInfo->cmdPool);
+	setupDepthStencil(deviceInfo, physDeviceInfo, windowInfo->clientWidth, windowInfo->clientHeight);
+	return *deviceInfo;
+}
 
 VkDevice NewLogicalDevice(VkPhysicalDevice physicalDevice, uint32_t renderingQueueFamilyIndex, std::vector<const char*> deviceLayers, std::vector<const char*> deviceExts)
 {
@@ -383,7 +450,6 @@ void SetImageLayout(VkCommandBuffer cmdBuffer,
 		0, nullptr,
 		1, &imageMemoryBarrier);
 }
-
 
 
 std::vector<VkLayerProperties> GetInstalledVkLayers()
