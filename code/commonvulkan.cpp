@@ -1,10 +1,8 @@
 #include "commonvulkan.h"
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
-#include <string>
 #include <vector>
-#include <iostream>
-#include "win64_vulkantriangle.h"
+#include "win64_vulkanparticles.h"
 #include "util.h"
 
 PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallbackEXT = nullptr;

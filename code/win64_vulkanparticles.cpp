@@ -1,16 +1,13 @@
 
 
 #define VK_USE_PLATFORM_WIN32_KHR
-#include "win64_vulkantriangle.h"
+#include "win64_vulkanparticles.h"
 #include <vulkan/vulkan.h>
 
 #define GLM_FORCE_RADIANS
 #include <windows.h>
-#include <iostream>
-#include <string>
 #include <vector>
 #include <glm/glm.hpp>
-#include <chrono>
 #include "commonvulkan.h"
 #include "commonwindows.h"
 #include "surface.h"

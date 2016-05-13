@@ -1,10 +1,9 @@
 
-
+#include "surface.h"
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan\vulkan.h>
 #include "util.h"
 #include <vector>
-#include "win64_vulkantriangle.h"
 #include "commonwindows.h"
 
 //function pointers

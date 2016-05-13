@@ -2,8 +2,7 @@
 
 #include <string>
 #include <vulkan/vulkan.h>
-#include <iostream>
-#include "win64_vulkantriangle.h"
+#include <iostream> //need for cin
 
 //helper macros for annoying function pointers
 #define GET_VULKAN_FUNCTION_POINTER_INST(inst, function)							\
