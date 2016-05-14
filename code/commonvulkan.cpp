@@ -224,11 +224,36 @@ void NewPhysDeviceInfo(VkInstance vkInstance, PhysDeviceInfo* physDeviceInfo)
 	physDeviceInfo->supportedDepthFormat = GetSupportedDepthFormat(physDeviceInfo->physicalDevice);
 }
 
+std::vector<VkExtensionProperties> GetInstalledVkExtensions(VkPhysicalDevice physDevice)
+{
+	uint32_t numExtensions;
+	vkEnumerateDeviceExtensionProperties(physDevice, nullptr, &numExtensions, nullptr);
+	std::vector<VkExtensionProperties> extensions(numExtensions);
+	vkEnumerateDeviceExtensionProperties(physDevice, nullptr, &numExtensions, extensions.data());
+	return extensions;
+}
+
+std::vector<VkExtensionProperties> GetInstalledVkExtensions()
+{
+	uint32_t numExtensions;
+	vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, nullptr);
+	std::vector<VkExtensionProperties> extensions(numExtensions);
+	vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, extensions.data());
+	return extensions;
+}
+
 void NewDeviceInfo(const WindowInfo* windowInfo,
                    const PhysDeviceInfo* physDeviceInfo,
                    const SurfaceInfo* surfaceInfo,
                    DeviceInfo* deviceInfo)
 {
+	deviceInfo->extensions = GetInstalledVkExtensions(physDeviceInfo->physicalDevice);
+	std::vector<const char*> extensionChars(deviceInfo->extensions.size());
+	for (uint32_t i = 0; i < deviceInfo->extensions.size(); i++)
+	{
+		extensionChars[i] = deviceInfo->extensions[i].extensionName;
+	}
+
 #if VALIDATION_LAYERS
 	deviceInfo->layers = GetInstalledVkLayers(physDeviceInfo->physicalDevice);
 	std::vector<const char*> layerChars(deviceInfo->layers.size());
@@ -236,9 +261,9 @@ void NewDeviceInfo(const WindowInfo* windowInfo,
 	{
 		layerChars[i] = deviceInfo->layers[i].layerName;
 	}
-	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, layerChars, deviceInfo->extensions);
+	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, layerChars, extensionChars);
 #else
-	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, std::vector<const char*>(), deviceInfo->extensions);
+	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, std::vector<const char*>(), extensionChars);
 #endif
 
 	vkGetDeviceQueue(deviceInfo->device, surfaceInfo->renderingQueueFamilyIndex, 0, &deviceInfo->queue);
@@ -247,7 +272,7 @@ void NewDeviceInfo(const WindowInfo* windowInfo,
 	deviceInfo->renderComplete = NewSemaphore(deviceInfo->device);
 
 	deviceInfo->cmdPool = NewCommandPool(deviceInfo->device, surfaceInfo->renderingQueueFamilyIndex);
-	deviceInfo->setupCmdBuffer = NewCommandBuffer(deviceInfo->device, deviceInfo->cmdPool);
+	deviceInfo->setupCmdBuffer = NewSetupCommandBuffer(deviceInfo->device, deviceInfo->cmdPool);
 	setupDepthStencil(deviceInfo, physDeviceInfo, windowInfo->clientWidth, windowInfo->clientHeight);
 }
 
@@ -453,6 +478,10 @@ void SetImageLayout(VkCommandBuffer cmdBuffer,
 	VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
+
+	VkCommandBufferBeginInfo bInfo = {};
+	bInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
 	// Put barrier inside setup command buffer
 	vkCmdPipelineBarrier(
 	                     cmdBuffer,
@@ -462,6 +491,7 @@ void SetImageLayout(VkCommandBuffer cmdBuffer,
 	                     0, nullptr,
 	                     0, nullptr,
 	                     1, &imageMemoryBarrier);
+
 }
 
 
@@ -848,19 +878,21 @@ void NewInstanceInfo(const char* appName, InstanceInfo* instanceInfo)
 {
 #if VALIDATION_LAYERS
 	instanceInfo->layers = GetInstalledVkLayers();
-	instanceInfo->extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
-	instanceInfo->extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	//m->debugInfo.instanceExtList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	instanceInfo->extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-
 	std::vector<const char*> layerChars(instanceInfo->layers.size());
 	for (uint32_t i = 0; i < instanceInfo->layers.size(); i++)
 	{
 		layerChars[i] = instanceInfo->layers[i].layerName;
 	}
 
-	instanceInfo->vkInstance = NewVkInstance(appName, &instanceInfo->extensions, &layerChars);
+	instanceInfo->extensions = GetInstalledVkExtensions();
+	std::vector<const char*> extensionChars(instanceInfo->extensions.size());
+	for (uint32_t i = 0; i < instanceInfo->extensions.size(); i++)
+	{
+		extensionChars[i] = instanceInfo->extensions[i].extensionName;
+	}
+
+	instanceInfo->vkInstance = NewVkInstance(appName, &extensionChars, &layerChars);
 #if VALIDATION_LAYERS
 	CreateDebugCallback(instanceInfo->vkInstance, &instanceInfo->debugReport);
 #endif

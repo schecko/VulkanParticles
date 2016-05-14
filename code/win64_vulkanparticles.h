@@ -12,13 +12,13 @@
 
 static const uint32_t VERTEX_BUFFER_BIND_ID = 0;
 static const float CAMERA_SPEED = 0.001f;
-#define VALIDATION_LAYERS false
-#define VALIDATION_MESSAGES false
+#define VALIDATION_LAYERS true
+#define VALIDATION_MESSAGES true
 #define DEBUGGING true
 
 
 
-//vertex data store don ram
+//vertex data stored on ram
 struct Vertex
 {
 	float pos[3];

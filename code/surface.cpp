@@ -98,7 +98,8 @@ void GetSurfaceColorSpaceAndFormat(VkPhysicalDevice physicalDevice,
 	surfaceInfo->colorSpace = surfaceFormats[0].colorSpace;
 }
 
-static void SetImageLayout(VkCommandBuffer cmdBuffer,
+static void SetImageLayout(VkDevice device,
+						   VkCommandBuffer cmdBuffer,
                            VkImage image,
                            VkImageAspectFlags aspectMask,
                            VkImageLayout oldImageLayout,
@@ -199,7 +200,6 @@ static void SetImageLayout(VkCommandBuffer cmdBuffer,
 	// Put barrier on top
 	VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-
 	// Put barrier inside setup command buffer
 	vkCmdPipelineBarrier(
 	                     cmdBuffer,

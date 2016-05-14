@@ -342,55 +342,6 @@ void Init(MainMemory* m)
 	NewSwapchainInfo(&m->windowInfo, &m->physDeviceInfo, &m->surfaceInfo, &m->deviceInfo, &m->swapchainInfo);
 	SetupCommandBuffers(&m->deviceInfo, m->swapchainInfo.imageCount);
 
-	/*
-    m->surfaceInfo.surface = NewSurface(&m->windowInfo, m->vkInstance);
-    uint32_t gpuCount;
-    std::vector<VkPhysicalDevice> physicalDevices = EnumeratePhysicalDevices(m->vkInstance, &gpuCount);
-    m->physDeviceInfo.physicalDevice = physicalDevices[0];
-
-    //see what the gpu is capable of
-    //NOTE not actually used in other code
-    vkGetPhysicalDeviceFeatures(m->physDeviceInfo.physicalDevice, &m->physDeviceInfo.deviceFeatures);
-
-    vkGetPhysicalDeviceMemoryProperties(m->physDeviceInfo.physicalDevice, &m->physDeviceInfo.memoryProperties);
-
-    m->physDeviceInfo.renderingQueueFamilyIndex = FindGraphicsQueueFamilyIndex(m->physDeviceInfo.physicalDevice, m->surfaceInfo.surface);
-
-#if VALIDATION_LAYERS
-    std::vector<VkLayerProperties> layerPropsDevice = GetInstalledVkLayers(m->physDeviceInfo.physicalDevice);
-    for (uint32_t i = 0; i < layerPropsDevice.size(); i++)
-    {
-        //m->debugInfo.deviceLayerList.push_back(layerPropsDevice[i].layerName);
-    }
-#else
-		m->debugInfo.deviceLayerList.push_back("VK_LAYER_LUNARG_swapchain");
-#endif
-	m->debugInfo.deviceExtList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
-
-    m->deviceInfo.device = NewLogicalDevice(m->physDeviceInfo.physicalDevice, m->physDeviceInfo.renderingQueueFamilyIndex, m->debugInfo.deviceLayerList, m->debugInfo.deviceExtList);
-    vkGetDeviceQueue(m->deviceInfo.device, m->physDeviceInfo.renderingQueueFamilyIndex, 0, &m->deviceInfo.queue);
-    m->physDeviceInfo.supportedDepthFormat = GetSupportedDepthFormat(m->physDeviceInfo.physicalDevice);
-
-    m->deviceInfo.presentComplete = NewSemaphore(m->deviceInfo.device);
-    m->deviceInfo.renderComplete = NewSemaphore(m->deviceInfo.device);
-
-
-
-    GetSurfaceColorSpaceAndFormat(m->physDeviceInfo.physicalDevice,
-                                  &m->surfaceInfo);
-
-    m->deviceInfo.cmdPool = NewCommandPool(m->deviceInfo.device, m->physDeviceInfo.renderingQueueFamilyIndex);
-    m->deviceInfo.setupCmdBuffer = NewSetupCommandBuffer(m->deviceInfo.device, m->deviceInfo.cmdPool);
-    InitSwapChain(&m->deviceInfo, m->physDeviceInfo.physicalDevice, &m->surfaceInfo, &m->windowInfo.clientWidth, &m->windowInfo.clientHeight);
-	SetupCommandBuffers(&m->deviceInfo, m->surfaceInfo.imageCount);
-	setupDepthStencil(&m->deviceInfo,
-		&m->physDeviceInfo,
-		m->windowInfo.clientWidth,
-		m->windowInfo.clientHeight);
-		*/
-
-
 	m->pipelineInfo.renderPass = NewRenderPass(m->deviceInfo.device, 
 		m->surfaceInfo.colorFormat, 
 		m->physDeviceInfo.supportedDepthFormat);
@@ -507,7 +458,12 @@ void Render(const DeviceInfo* deviceInfo, SwapchainInfo* swapchainInfo)
 void Update(MainMemory* m)
 {
 	InputInfo input = m->input;
+
+
 	float speed = CAMERA_SPEED * m->timerInfo.frameTimeMilliSec;
+#if DEBUGGING | VALIDATION_MESSAGES | VALIDATION_LAYERS
+	speed /= 30;
+#endif
 	if(input.keys[keyW])
 	{
 		m->camera.cameraPos.position += (m->camera.cameraPos.front * speed * 10.0f);
@@ -576,10 +532,11 @@ void Quit(MainMemory* m)
 	vkFreeMemory(m->deviceInfo.device, m->camera.memory, nullptr);
 
 
-	//destroy "framework" buffers
+	//destroy "framework" objects
 	DestroyTimerInfo(&m->timerInfo);
     DestroyWindowInfo(&m->windowInfo);
 	DestroyPipelineInfo(m->deviceInfo.device, &m->pipelineInfo);
+	DestroySwapchainInfo(&m->deviceInfo, &m->swapchainInfo);
 	DestroySurfaceInfo(m->instanceInfo.vkInstance, &m->surfaceInfo);
 	DestroyDeviceInfo(&m->deviceInfo);
 	DestroyInstanceInfo(&m->instanceInfo);
@@ -598,7 +555,12 @@ int main(int argv, char** argc)
 		Update(m);
         Render(&m->deviceInfo, &m->swapchainInfo);
 		Tock(&m->timerInfo);
+#if DEBUGGING | VALIDATION_MESSAGES | VALIDATION_LAYERS
+		Sleep(&m->timerInfo, 15);
+#else
 		Sleep(&m->timerInfo, 60);
+#endif
+
     }
     Quit(m);
     delete m;

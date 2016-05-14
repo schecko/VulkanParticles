@@ -68,7 +68,7 @@ struct DeviceInfo
 
 	DepthStencil depthStencil;
 
-	std::vector<const char*> extensions;
+	std::vector<VkExtensionProperties> extensions;
 	std::vector<VkLayerProperties> layers;
 };
 
@@ -88,21 +88,10 @@ struct PipelineInfo
 struct InstanceInfo
 {
 	VkInstance vkInstance;
-	std::vector<const char*> extensions;
+	std::vector<VkExtensionProperties> extensions;
 	std::vector<VkLayerProperties> layers;
 	VkDebugReportCallbackEXT debugReport;
 };
-
-enum supportedExtensions
-{
-	noExtensions = 0x0,
-	winSurfaceExtension = 0x1,
-	//TODO get around to adding lunix/android
-	lunixSurfaceExtension = 0x2,
-	androidSurfaceExtension = 0x4
-	
-};
-
 
 void CreateDebugCallback(VkInstance vkInstance, VkDebugReportCallbackEXT* debugReport);
 
@@ -135,6 +124,10 @@ void SetImageLayout(VkCommandBuffer cmdBuffer,
 	VkImageLayout newImageLayout);
 
 std::vector<VkLayerProperties> GetInstalledVkLayers();
+
+std::vector<VkExtensionProperties> GetInstalledVkExtensions();
+
+std::vector<VkExtensionProperties> GetInstalledVkExtensions(VkPhysicalDevice physDevice);
 
 std::vector<VkLayerProperties> GetInstalledVkLayers(VkPhysicalDevice physicalDevice);
 
