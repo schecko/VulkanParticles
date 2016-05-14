@@ -1,4 +1,3 @@
-
 #include "surface.h"
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan\vulkan.h>
@@ -34,9 +33,9 @@ VkSurfaceKHR NewSurface(VkInstance vkInstance, const WindowInfo* window)
 	surfaceCreateInfo.hinstance = window->exeHandle;
 	surfaceCreateInfo.hwnd = window->windowHandle;
 	error = vkCreateWin32SurfaceKHR(vkInstance,
-		&surfaceCreateInfo,
-		nullptr,
-		&surface);
+	                                &surfaceCreateInfo,
+	                                nullptr,
+	                                &surface);
 
 	Assert(error, "could not create windows surface");
 
@@ -52,7 +51,6 @@ VkSurfaceKHR NewSurface(VkInstance vkInstance, const WindowInfo* window)
 //from the physicaldevice as a param, returns a grphics queueFamily cabable of a rendering pipeline.
 uint32_t FindGraphicsQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR surface)
 {
-
 	uint32_t queueCount = 0;
 	uint32_t graphicsAndPresentingQueueIndex = 0;
 	VkBool32 supportsPresent;
@@ -75,7 +73,7 @@ uint32_t FindGraphicsQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfa
 }
 
 void GetSurfaceColorSpaceAndFormat(VkPhysicalDevice physicalDevice,
-	SurfaceInfo* surfaceInfo)
+                                   SurfaceInfo* surfaceInfo)
 {
 	uint32_t surfaceFormatCount;
 	VkResult error;
@@ -85,16 +83,15 @@ void GetSurfaceColorSpaceAndFormat(VkPhysicalDevice physicalDevice,
 
 	std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatCount);
 	error = GetPhysicalDeviceSurfaceFormatsKHR(physicalDevice,
-		surfaceInfo->surface,
-		&surfaceFormatCount,
-		surfaceFormats.data());
+	                                           surfaceInfo->surface,
+	                                           &surfaceFormatCount,
+	                                           surfaceFormats.data());
 	Assert(error, "could not get surface format counts, GetphysicalDeviceSurfaceFormatsKHR is probably null");
 
 	if (surfaceFormatCount == 1 && surfaceFormats[0].format == VK_FORMAT_UNDEFINED)
 	{
 		surfaceInfo->colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
-	}
-	else
+	} else
 	{
 		surfaceInfo->colorFormat = surfaceFormats[0].format;
 	}
@@ -102,10 +99,10 @@ void GetSurfaceColorSpaceAndFormat(VkPhysicalDevice physicalDevice,
 }
 
 static void SetImageLayout(VkCommandBuffer cmdBuffer,
-	VkImage image,
-	VkImageAspectFlags aspectMask,
-	VkImageLayout oldImageLayout,
-	VkImageLayout newImageLayout)
+                           VkImage image,
+                           VkImageAspectFlags aspectMask,
+                           VkImageLayout oldImageLayout,
+                           VkImageLayout newImageLayout)
 {
 	VkImageSubresourceRange subresourceRange = {};
 	subresourceRange.aspectMask = aspectMask;
@@ -205,13 +202,13 @@ static void SetImageLayout(VkCommandBuffer cmdBuffer,
 
 	// Put barrier inside setup command buffer
 	vkCmdPipelineBarrier(
-		cmdBuffer,
-		srcStageFlags,
-		destStageFlags,
-		0,
-		0, nullptr,
-		0, nullptr,
-		1, &imageMemoryBarrier);
+	                     cmdBuffer,
+	                     srcStageFlags,
+	                     destStageFlags,
+	                     0,
+	                     0, nullptr,
+	                     0, nullptr,
+	                     1, &imageMemoryBarrier);
 }
 
 
@@ -220,23 +217,21 @@ static VkSurfaceCapabilitiesKHR GetSurfaceCaps(VkPhysicalDevice physDevice, VkSu
 	VkSurfaceCapabilitiesKHR surfaceCaps;
 	VkResult error;
 	error = GetPhysicalDeviceSurfaceCapabilitiesKHR(physDevice,
-		surface,
-		&surfaceCaps);
+	                                                surface,
+	                                                &surfaceCaps);
 	Assert(error, "could not get surface capabilities, the function is probably null?");
 	return surfaceCaps;
-
 }
 
 static std::vector<VkPresentModeKHR> GetPresentModes(VkPhysicalDevice physDevice, VkSurfaceKHR surface)
 {
-
 	uint32_t presentModeCount;
 	VkResult error;
 
 	error = GetPhysicalDeviceSurfacePresentModesKHR(physDevice,
-		surface,
-		&presentModeCount,
-		nullptr);
+	                                                surface,
+	                                                &presentModeCount,
+	                                                nullptr);
 	Assert(error, "could not get surface present modes");
 	Assert(presentModeCount > 0, "present mode count is zero!!");
 
@@ -244,12 +239,11 @@ static std::vector<VkPresentModeKHR> GetPresentModes(VkPhysicalDevice physDevice
 
 
 	error = GetPhysicalDeviceSurfacePresentModesKHR(physDevice,
-		surface,
-		&presentModeCount,
-		presentModes.data());
+	                                                surface,
+	                                                &presentModeCount,
+	                                                presentModes.data());
 	Assert(error, "could not get the present Modes");
 	return presentModes;
-
 }
 
 VkPresentModeKHR GetPresentMode(std::vector<VkPresentModeKHR>* presentModes)
@@ -279,8 +273,7 @@ VkExtent2D GetSurfaceExtent(VkSurfaceCapabilitiesKHR* surfaceCaps, uint32_t* cli
 	{
 		surfaceExtant.width = *clientWidth;
 		surfaceExtant.height = *clientHeight;
-	}
-	else
+	} else
 	{
 		surfaceExtant = surfaceCaps->currentExtent;
 		*clientWidth = surfaceCaps->currentExtent.width;
@@ -306,35 +299,32 @@ VkSurfaceTransformFlagBitsKHR GetSurfaceTransformBits(const VkSurfaceCapabilitie
 	if (surfaceCaps->supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
 	{
 		preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	}
-	else
+	} else
 	{
 		preTransform = surfaceCaps->currentTransform;
 	}
 	return preTransform;
 }
 
-SurfaceInfo NewSurfaceInfo(VkInstance vkInstance, const PhysDeviceInfo* physDeviceInfo, const WindowInfo* windowInfo)
+void NewSurfaceInfo(VkInstance vkInstance,
+	const WindowInfo* windowInfo,
+	const PhysDeviceInfo* physDeviceInfo,
+	SurfaceInfo* surfaceInfo)
 {
-	SurfaceInfo surfaceInfo = {};
-	surfaceInfo.surface = NewSurface(vkInstance, windowInfo);
-	surfaceInfo.renderingQueueFamilyIndex = FindGraphicsQueueFamilyIndex(physDeviceInfo->physicalDevice, surfaceInfo.surface);
-	GetSurfaceColorSpaceAndFormat(physDeviceInfo->physicalDevice, &surfaceInfo);
-	return surfaceInfo;
+	surfaceInfo->surface = NewSurface(vkInstance, windowInfo);
+	surfaceInfo->renderingQueueFamilyIndex = FindGraphicsQueueFamilyIndex(physDeviceInfo->physicalDevice, surfaceInfo->surface);
+	GetSurfaceColorSpaceAndFormat(physDeviceInfo->physicalDevice, surfaceInfo);
 }
 
-SwapchainInfo NewSwapChainInfo(
-	const DeviceInfo* deviceInfo,
-	VkPhysicalDevice physDevice,
-	SurfaceInfo* surfaceInfo,
-	uint32_t* width,
-	uint32_t* height)
+void NewSwapchainInfo(WindowInfo* windowInfo,
+					  const PhysDeviceInfo* physDeviceInfo,
+                      const SurfaceInfo* surfaceInfo,
+                      const DeviceInfo* deviceInfo,
+                      SwapchainInfo* swapchainInfo)
 {
 	//TODO parts of this function could be moved to other functions to improve the flow of initialization?
 	//specifically move the use of the function extensions into a single function?
 	VkResult error;
-
-	SwapchainInfo swapchainInfo = {};
 
 	//after logical device creation we can retrieve function pointers associated with it
 	GET_VULKAN_FUNCTION_POINTER_DEV(deviceInfo->device, CreateSwapchainKHR);
@@ -343,8 +333,8 @@ SwapchainInfo NewSwapChainInfo(
 	GET_VULKAN_FUNCTION_POINTER_DEV(deviceInfo->device, AcquireNextImageKHR);
 	GET_VULKAN_FUNCTION_POINTER_DEV(deviceInfo->device, QueuePresentKHR);
 
-	VkSurfaceCapabilitiesKHR surfaceCaps = GetSurfaceCaps(physDevice, surfaceInfo->surface);
-	std::vector<VkPresentModeKHR> presentModes = GetPresentModes(physDevice, surfaceInfo->surface);
+	VkSurfaceCapabilitiesKHR surfaceCaps = GetSurfaceCaps(physDeviceInfo->physicalDevice, surfaceInfo->surface);
+	std::vector<VkPresentModeKHR> presentModes = GetPresentModes(physDeviceInfo->physicalDevice, surfaceInfo->surface);
 
 	VkSwapchainCreateInfoKHR scInfo = {};
 	scInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -352,7 +342,7 @@ SwapchainInfo NewSwapChainInfo(
 	scInfo.minImageCount = GetDesiredNumSwapChainImages(&surfaceCaps);
 	scInfo.imageFormat = surfaceInfo->colorFormat;
 	scInfo.imageColorSpace = surfaceInfo->colorSpace;
-	scInfo.imageExtent = GetSurfaceExtent(&surfaceCaps, width, height);
+	scInfo.imageExtent = GetSurfaceExtent(&surfaceCaps, &windowInfo->clientWidth, &windowInfo->clientHeight);
 	scInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	scInfo.preTransform = GetSurfaceTransformBits(&surfaceCaps);
 	scInfo.imageArrayLayers = 1;
@@ -363,17 +353,17 @@ SwapchainInfo NewSwapChainInfo(
 	scInfo.clipped = VK_TRUE;
 	scInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
-	error = CreateSwapchainKHR(deviceInfo->device, &scInfo, nullptr, &swapchainInfo.swapChain);
+	error = CreateSwapchainKHR(deviceInfo->device, &scInfo, nullptr, &swapchainInfo->swapChain);
 	Assert(error, "could not create a swapchain");
 
-	error = GetSwapchainImagesKHR(deviceInfo->device, swapchainInfo.swapChain, &swapchainInfo.imageCount, nullptr);
+	error = GetSwapchainImagesKHR(deviceInfo->device, swapchainInfo->swapChain, &swapchainInfo->imageCount, nullptr);
 	Assert(error, "could not get surface image count");
-	swapchainInfo.images.resize(swapchainInfo.imageCount);
-	swapchainInfo.views.resize(swapchainInfo.imageCount);
-	error = GetSwapchainImagesKHR(deviceInfo->device, swapchainInfo.swapChain, &swapchainInfo.imageCount, swapchainInfo.images.data());
+	swapchainInfo->images.resize(swapchainInfo->imageCount);
+	swapchainInfo->views.resize(swapchainInfo->imageCount);
+	error = GetSwapchainImagesKHR(deviceInfo->device, swapchainInfo->swapChain, &swapchainInfo->imageCount, swapchainInfo->images.data());
 	Assert(error, "could not fill surface images vector");
 
-	for (uint32_t i = 0; i < swapchainInfo.imageCount; i++)
+	for (uint32_t i = 0; i < swapchainInfo->imageCount; i++)
 	{
 		VkImageViewCreateInfo ivInfo = {};
 		ivInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -393,17 +383,15 @@ SwapchainInfo NewSwapChainInfo(
 		ivInfo.flags = 0;
 
 		SetImageLayout(deviceInfo->setupCmdBuffer,
-			swapchainInfo.images[i],
-			VK_IMAGE_ASPECT_COLOR_BIT,
-			VK_IMAGE_LAYOUT_UNDEFINED,
-			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		               swapchainInfo->images[i],
+		               VK_IMAGE_ASPECT_COLOR_BIT,
+		               VK_IMAGE_LAYOUT_UNDEFINED,
+		               VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
-		ivInfo.image = swapchainInfo.images[i];
-		error = vkCreateImageView(deviceInfo->device, &ivInfo, nullptr, &swapchainInfo.views[i]);
+		ivInfo.image = swapchainInfo->images[i];
+		error = vkCreateImageView(deviceInfo->device, &ivInfo, nullptr, &swapchainInfo->views[i]);
 		Assert(error, "could not create image view");
 	}
-
-	return swapchainInfo;
 }
 
 VkResult AcquireNextImage(const DeviceInfo* deviceInfo, SwapchainInfo* swapchainInfo)
@@ -426,7 +414,6 @@ VkResult QueuePresent(const DeviceInfo* deviceInfo, const SwapchainInfo* swapcha
 
 void DestroySurfaceInfo(VkInstance vkInstance, SurfaceInfo* surfaceInfo)
 {
-
 	vkDestroySurfaceKHR(vkInstance, surfaceInfo->surface, nullptr);
 	*surfaceInfo = {};
 }
@@ -438,9 +425,9 @@ void DestroySwapchainInfo(const DeviceInfo* deviceInfo, SwapchainInfo* swapchain
 		//TODO is image destroyed along with its associated imageview?
 		//vkDestroyImage(device, surfaceInfo->images[i], nullptr);
 		vkDestroyImageView(deviceInfo->device, swapchainInfo->views[i], nullptr);
-
 	}
 
 	DestroySwapchainKHR(deviceInfo->device, swapchainInfo->swapChain, nullptr);
 	*swapchainInfo = {};
 }
+

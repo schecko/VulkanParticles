@@ -10,10 +10,9 @@
 #include "commonwindows.h"
 #include "camera.h"
 
-static const char* EXE_NAME = "VulkanTriangle";
 static const uint32_t VERTEX_BUFFER_BIND_ID = 0;
 static const float CAMERA_SPEED = 0.001f;
-#define VALIDATION_LAYERS true
+#define VALIDATION_LAYERS false
 #define VALIDATION_MESSAGES false
 #define DEBUGGING true
 
@@ -57,11 +56,11 @@ struct MainMemory
 
 	InputInfo input;
 
-	VkInstance vkInstance;
+	InstanceInfo instanceInfo;
 	SurfaceInfo surfaceInfo;
 	PhysDeviceInfo physDeviceInfo;
-	DebugInfo debugInfo;
 	DeviceInfo deviceInfo;
+	SwapchainInfo swapchainInfo;
 
 	VkCommandBuffer textureCmdBuffer;
 	VertexBuffer vertexBuffer;

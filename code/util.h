@@ -2,7 +2,9 @@
 
 #include <string>
 #include <vulkan/vulkan.h>
+// ReSharper disable once CppUnusedIncludeDirective
 #include <iostream> //need for cin
+#include "win64_vulkanparticles.h"
 
 //helper macros for annoying function pointers
 #define GET_VULKAN_FUNCTION_POINTER_INST(inst, function)							\
@@ -44,7 +46,7 @@ inline void Message(double message)
 //the message is printed out and execution halts using std::cin rather than abort() or nullptr errors
 inline void Assert(bool test, std::string message)
 {
-#if DEBUGGING == true
+#if DEBUGGING
 	char x;
 	if (test == false)
 	{

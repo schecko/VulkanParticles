@@ -5,6 +5,13 @@
 #include <vector>
 #include "surface.h"
 
+struct SwapchainInfo;
+struct SurfaceInfo;
+struct WindowInfo;
+
+#ifndef VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+#define VK_KHR_WIN32_SURFACE_EXTENSION_NAME "VK_KHR_win32_surface"
+#endif
 
 
 //TODO dont really know
@@ -37,6 +44,7 @@ struct PhysDeviceInfo
 
 	VkPhysicalDeviceFeatures deviceFeatures;
 	VkPhysicalDeviceMemoryProperties memoryProperties;
+
 };
 
 struct DeviceInfo
@@ -59,6 +67,9 @@ struct DeviceInfo
 	std::vector<VkFramebuffer> frameBuffers;
 
 	DepthStencil depthStencil;
+
+	std::vector<const char*> extensions;
+	std::vector<VkLayerProperties> layers;
 };
 
 struct PipelineInfo
@@ -74,20 +85,24 @@ struct PipelineInfo
 
 };
 
-struct DebugInfo
+struct InstanceInfo
 {
-	std::vector<const char*> instanceLayerList;
-	std::vector<const char*> instanceExtList;
-	std::vector<const char*> deviceLayerList;
-	std::vector<const char*> deviceExtList;
+	VkInstance vkInstance;
+	std::vector<const char*> extensions;
+	std::vector<VkLayerProperties> layers;
 	VkDebugReportCallbackEXT debugReport;
 };
 
-enum VkExtension
+enum supportedExtensions
 {
-	noExtension,
-
+	noExtensions = 0x0,
+	winSurfaceExtension = 0x1,
+	//TODO get around to adding lunix/android
+	lunixSurfaceExtension = 0x2,
+	androidSurfaceExtension = 0x4
+	
 };
+
 
 void CreateDebugCallback(VkInstance vkInstance, VkDebugReportCallbackEXT* debugReport);
 
@@ -95,7 +110,11 @@ VkDescriptorSetLayout NewDescriptorSetLayout(VkDevice logicalDevice, VkDescripto
 
 VkPipelineLayout NewPipelineLayout(VkDevice logicalDevice, VkDescriptorSetLayout descriptorSetLayout);
 
-VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceLayers, std::vector<const char*>* instanceExts);
+VkInstance NewVkInstance(const char* appName);
+
+VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceExts);
+
+VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceExts, std::vector<const char*>* instanceLayers);
 
 std::vector<VkPhysicalDevice> EnumeratePhysicalDevices(VkInstance vkInstance, uint32_t* gpuCount);
 
@@ -155,16 +174,39 @@ void FlushSetupCommandBuffer(DeviceInfo* deviceInfo);
 
 VkBuffer NewBuffer(VkDevice logicalDevice, uint32_t bufferSize, VkBufferUsageFlags usageBits);
 
-StagingBuffer AllocBindDataToGPU(VkDevice logicalDevice, VkPhysicalDeviceMemoryProperties memoryProperties, uint32_t dataSize, void* dataTobind, VkBuffer* buffer, VkDeviceMemory* memory);
+StagingBuffer AllocBindDataToGPU(VkDevice logicalDevice,
+	VkPhysicalDeviceMemoryProperties memoryProperties, 
+	uint32_t dataSize, 
+	void* dataTobind, 
+	VkBuffer* buffer, 
+	VkDeviceMemory* memory);
 
-VkMemoryAllocateInfo NewMemoryAllocInfo(VkDevice logicalDevice, VkPhysicalDeviceMemoryProperties memoryProperties, VkBuffer buffer, uint32_t desiredAllocSize, VkFlags desiredMemoryProperties);
+VkMemoryAllocateInfo NewMemoryAllocInfo(VkDevice logicalDevice, 
+	VkPhysicalDeviceMemoryProperties memoryProperties, 
+	VkBuffer buffer, 
+	uint32_t desiredAllocSize, 
+	VkFlags desiredMemoryProperties);
 
-VkPipelineShaderStageCreateInfo NewShaderStageInfo(VkDevice logicalDevice, PipelineInfo* pipelineInfo, uint32_t* data, uint32_t dataSize, VkShaderStageFlagBits stage);
+VkPipelineShaderStageCreateInfo NewShaderStageInfo(VkDevice logicalDevice,
+	PipelineInfo* pipelineInfo, 
+	uint32_t* data,
+	uint32_t dataSize, 
+	VkShaderStageFlagBits stage);
 
 void DestroyPipelineInfo(VkDevice device, PipelineInfo* pipelineInfo);
 
 void DestroyDeviceInfo(DeviceInfo* deviceInfo);
 
-void DestroyDebugInfo(VkInstance vkInstance, DebugInfo* debugInfo);
+void NewPhysDeviceInfo(VkInstance vkInstance, PhysDeviceInfo* physDeviceInfo);
 
-void DestroyInstance(VkInstance vkInstance);
+void NewDeviceInfo(const WindowInfo* windowInfo,
+	const PhysDeviceInfo* physDeviceInfo,
+	const SurfaceInfo* surfaceInfo,
+	DeviceInfo* deviceInfo);
+
+void NewInstanceInfo(const char* appName, InstanceInfo* instanceInfo);
+
+void DestroyInstanceInfo(InstanceInfo* instanceInfo);
+
+
+

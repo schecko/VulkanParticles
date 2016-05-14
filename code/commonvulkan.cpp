@@ -9,32 +9,30 @@ PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallbackEXT = nullptr;
 PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallbackEXT = nullptr;
 
 
-
 void CreateDebugCallback(VkInstance vkInstance, VkDebugReportCallbackEXT* debugReport)
 {
 	VkDebugReportCallbackCreateInfoEXT debugCreateInfo = {};
 	debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
 	debugCreateInfo.pfnCallback = VkDebugCallback;
 	debugCreateInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
-		VK_DEBUG_REPORT_WARNING_BIT_EXT |
-		VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-		VK_DEBUG_REPORT_ERROR_BIT_EXT |
-		VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+			VK_DEBUG_REPORT_WARNING_BIT_EXT |
+			VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+			VK_DEBUG_REPORT_ERROR_BIT_EXT |
+			VK_DEBUG_REPORT_DEBUG_BIT_EXT;
 	VkResult error = CreateDebugReportCallbackEXT(vkInstance, &debugCreateInfo, nullptr, debugReport);
 	Assert(error == VK_SUCCESS, "could not create vulkan error callback");
-
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VkDebugCallback(VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objType,
-	uint64_t srcObj,
-	size_t location,
-	int32_t msgCode,
-	const char* layerPrefix,
-	const char* msg,
-	void* data)
+                                               VkDebugReportObjectTypeEXT objType,
+                                               uint64_t srcObj,
+                                               size_t location,
+                                               int32_t msgCode,
+                                               const char* layerPrefix,
+                                               const char* msg,
+                                               void* data)
 {
-#if VALIDATION_MESSAGES == true
+#if VALIDATION_MESSAGES
 	std::string reportMessage;
 	if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
 	{
@@ -69,7 +67,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VkDebugCallback(VkDebugReportFlagsEXT flags,
 #endif
 	if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
 	{
-
 		Assert(0, "error in VK");
 		return true;
 	}
@@ -115,31 +112,17 @@ VkInstance NewVkInstance(const char* appName)
 	VkResult error;
 	VkInstance vkInstance;
 	std::vector<const char*> extensions, layers;
-	extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME); //required for pretty much all other extensions
-	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	
-	//layers = GetInstalledVkLayers();
 
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = appName;
 	appInfo.pEngineName = appName;
-	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 8);
-	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 8);
+	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
 
 	VkInstanceCreateInfo instanceCreateInfo = {};
 	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	instanceCreateInfo.pApplicationInfo = &appInfo;
-
-#if(VALIDATION_LAYERS)
-	//instanceCreateInfo.enabledLayerCount = (uint32_t)instanceLayers->size();
-	//instanceCreateInfo.ppEnabledLayerNames = instanceLayers->data();
-#endif
-
-	//instanceCreateInfo.enabledExtensionCount = (uint32_t)instanceExts->size();
-	//instanceCreateInfo.ppEnabledExtensionNames = instanceExts->data();
-
-
 
 	error = vkCreateInstance(&instanceCreateInfo, nullptr, &vkInstance);
 
@@ -153,7 +136,7 @@ VkInstance NewVkInstance(const char* appName)
 	return vkInstance;
 }
 
-VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceLayers, std::vector<const char*>* instanceExts)
+VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceExts, std::vector<const char*>* instanceLayers)
 {
 	VkResult error;
 	VkInstance vkInstance;
@@ -162,8 +145,8 @@ VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instance
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = appName;
 	appInfo.pEngineName = appName;
-	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 8);
-	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 8);
+	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
 
 	VkInstanceCreateInfo instanceCreateInfo = {};
 	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -178,7 +161,6 @@ VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instance
 	instanceCreateInfo.ppEnabledExtensionNames = instanceExts->data();
 
 
-
 	error = vkCreateInstance(&instanceCreateInfo, nullptr, &vkInstance);
 
 	Assert(error == VK_SUCCESS, "could not create instance of vulkan");
@@ -191,11 +173,35 @@ VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instance
 	return vkInstance;
 }
 
+VkInstance NewVkInstance(const char* appName, std::vector<const char*>* instanceExts)
+{
+	VkResult error;
+	VkInstance vkInstance;
+
+	VkApplicationInfo appInfo = {};
+	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	appInfo.pApplicationName = appName;
+	appInfo.pEngineName = appName;
+	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION);
+
+	VkInstanceCreateInfo instanceCreateInfo = {};
+	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	instanceCreateInfo.pApplicationInfo = &appInfo;
+
+	instanceCreateInfo.enabledExtensionCount = (uint32_t)instanceExts->size();
+	instanceCreateInfo.ppEnabledExtensionNames = instanceExts->data();
+
+	error = vkCreateInstance(&instanceCreateInfo, nullptr, &vkInstance);
+	Assert(error, "could not create instance of vulkan");
+
+	return vkInstance;
+}
+
 //fill the gpuCount param with the number of physical devices available to the program, and return a pointer to a vector containing the physical devices
 //returns a vector of the physical devices handles.
 std::vector<VkPhysicalDevice> EnumeratePhysicalDevices(VkInstance vkInstance, uint32_t* gpuCount)
 {
-
 	VkResult error;
 	error = vkEnumeratePhysicalDevices(vkInstance, gpuCount, nullptr);
 	Assert(error, "could not enumerate gpus");
@@ -208,23 +214,33 @@ std::vector<VkPhysicalDevice> EnumeratePhysicalDevices(VkInstance vkInstance, ui
 	return physicalDevices;
 }
 
-PhysDeviceInfo NewPhysDeviceInfo(VkInstance vkInstance)
+void NewPhysDeviceInfo(VkInstance vkInstance, PhysDeviceInfo* physDeviceInfo)
 {
 	uint32_t gpuCount;
-	PhysDeviceInfo* physDeviceInfo = {};
 	std::vector<VkPhysicalDevice> physicalDevices = EnumeratePhysicalDevices(vkInstance, &gpuCount);
 	physDeviceInfo->physicalDevice = physicalDevices[0];
 	vkGetPhysicalDeviceFeatures(physDeviceInfo->physicalDevice, &physDeviceInfo->deviceFeatures);
 	vkGetPhysicalDeviceMemoryProperties(physDeviceInfo->physicalDevice, &physDeviceInfo->memoryProperties);
 	physDeviceInfo->supportedDepthFormat = GetSupportedDepthFormat(physDeviceInfo->physicalDevice);
-	return *physDeviceInfo;
 }
 
-DeviceInfo NewDeviceInfo(const SurfaceInfo* surfaceInfo, const PhysDeviceInfo* physDeviceInfo, const WindowInfo* windowInfo, const DebugInfo* debugInfo = nullptr)
+void NewDeviceInfo(const WindowInfo* windowInfo,
+                   const PhysDeviceInfo* physDeviceInfo,
+                   const SurfaceInfo* surfaceInfo,
+                   DeviceInfo* deviceInfo)
 {
-	DeviceInfo* deviceInfo = {};
+#if VALIDATION_LAYERS
+	deviceInfo->layers = GetInstalledVkLayers(physDeviceInfo->physicalDevice);
+	std::vector<const char*> layerChars(deviceInfo->layers.size());
+	for (uint32_t i = 0; i < deviceInfo->layers.size(); i++)
+	{
+		layerChars[i] = deviceInfo->layers[i].layerName;
+	}
+	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, layerChars, deviceInfo->extensions);
+#else
+	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, std::vector<const char*>(), deviceInfo->extensions);
+#endif
 
-	deviceInfo->device = NewLogicalDevice(physDeviceInfo->physicalDevice, surfaceInfo->renderingQueueFamilyIndex, debugInfo->deviceLayerList, debugInfo->deviceExtList);
 	vkGetDeviceQueue(deviceInfo->device, surfaceInfo->renderingQueueFamilyIndex, 0, &deviceInfo->queue);
 
 	deviceInfo->presentComplete = NewSemaphore(deviceInfo->device);
@@ -233,13 +249,12 @@ DeviceInfo NewDeviceInfo(const SurfaceInfo* surfaceInfo, const PhysDeviceInfo* p
 	deviceInfo->cmdPool = NewCommandPool(deviceInfo->device, surfaceInfo->renderingQueueFamilyIndex);
 	deviceInfo->setupCmdBuffer = NewCommandBuffer(deviceInfo->device, deviceInfo->cmdPool);
 	setupDepthStencil(deviceInfo, physDeviceInfo, windowInfo->clientWidth, windowInfo->clientHeight);
-	return *deviceInfo;
 }
 
 VkDevice NewLogicalDevice(VkPhysicalDevice physicalDevice, uint32_t renderingQueueFamilyIndex, std::vector<const char*> deviceLayers, std::vector<const char*> deviceExts)
 {
 
-	float queuePriorities[1] = { 0.0f };
+	float queuePriorities[1] = {0.0f};
 	VkDeviceQueueCreateInfo queueCreateInfo = {};
 	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queueCreateInfo.queueFamilyIndex = renderingQueueFamilyIndex;
@@ -269,13 +284,13 @@ VkDevice NewLogicalDevice(VkPhysicalDevice physicalDevice, uint32_t renderingQue
 VkFormat GetSupportedDepthFormat(VkPhysicalDevice physicalDevice)
 {
 	VkFormat depthFormats[] =
-	{
-		VK_FORMAT_D32_SFLOAT_S8_UINT,
-		VK_FORMAT_D32_SFLOAT,
-		VK_FORMAT_D24_UNORM_S8_UINT,
-		VK_FORMAT_D16_UNORM_S8_UINT,
-		VK_FORMAT_D16_UNORM
-	};
+			{
+				VK_FORMAT_D32_SFLOAT_S8_UINT,
+				VK_FORMAT_D32_SFLOAT,
+				VK_FORMAT_D24_UNORM_S8_UINT,
+				VK_FORMAT_D16_UNORM_S8_UINT,
+				VK_FORMAT_D16_UNORM
+			};
 	VkFormat depthFormat = {};
 	bool found = false;
 	for (uint32_t i = 0; i < sizeof(depthFormats) / sizeof(VkFormat); i++)
@@ -288,7 +303,6 @@ VkFormat GetSupportedDepthFormat(VkPhysicalDevice physicalDevice)
 			found = true;
 			break;
 		}
-
 	}
 	Assert(found == true, "could not find a supported depth format");
 	return depthFormat;
@@ -335,14 +349,13 @@ VkCommandBuffer NewSetupCommandBuffer(VkDevice logicalDevice, VkCommandPool cmdP
 	error = vkBeginCommandBuffer(setupBuffer, &setupBeginInfo);
 	Assert(error, "could not begin setup command buffer.");
 	return setupBuffer;
-
 }
 
 void SetImageLayout(VkCommandBuffer cmdBuffer,
-	VkImage image,
-	VkImageAspectFlags aspectMask,
-	VkImageLayout oldImageLayout,
-	VkImageLayout newImageLayout)
+                    VkImage image,
+                    VkImageAspectFlags aspectMask,
+                    VkImageLayout oldImageLayout,
+                    VkImageLayout newImageLayout)
 {
 	VkImageSubresourceRange subresourceRange = {};
 	subresourceRange.aspectMask = aspectMask;
@@ -442,13 +455,13 @@ void SetImageLayout(VkCommandBuffer cmdBuffer,
 
 	// Put barrier inside setup command buffer
 	vkCmdPipelineBarrier(
-		cmdBuffer,
-		srcStageFlags,
-		destStageFlags,
-		0,
-		0, nullptr,
-		0, nullptr,
-		1, &imageMemoryBarrier);
+	                     cmdBuffer,
+	                     srcStageFlags,
+	                     destStageFlags,
+	                     0,
+	                     0, nullptr,
+	                     0, nullptr,
+	                     1, &imageMemoryBarrier);
 }
 
 
@@ -460,7 +473,6 @@ std::vector<VkLayerProperties> GetInstalledVkLayers()
 	vkEnumerateInstanceLayerProperties(&layerCount, layerProps.data());
 
 	return layerProps;
-
 }
 
 std::vector<VkLayerProperties> GetInstalledVkLayers(VkPhysicalDevice physicalDevice)
@@ -504,7 +516,6 @@ std::vector<VkCommandBuffer> NewCommandBuffer(VkDevice logicalDevice, VkCommandP
 }
 
 
-
 void GetMemoryType(VkPhysicalDeviceMemoryProperties memoryProperties, uint32_t typeBits, VkFlags properties, uint32_t* typeIndex)
 {
 	for (uint32_t i = 0; i < 32; i++)
@@ -516,19 +527,18 @@ void GetMemoryType(VkPhysicalDeviceMemoryProperties memoryProperties, uint32_t t
 		}
 		typeBits >>= 1;
 	}
-
 }
 
 void setupDepthStencil(DeviceInfo* deviceInfo,
-	const PhysDeviceInfo* physDeviceInfo,
-	uint32_t width,
-	uint32_t height)
+                       const PhysDeviceInfo* physDeviceInfo,
+                       uint32_t width,
+                       uint32_t height)
 {
 	VkImageCreateInfo image = {};
 	image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	image.imageType = VK_IMAGE_TYPE_2D;
 	image.format = physDeviceInfo->supportedDepthFormat;
-	image.extent = { width, height, 1 };
+	image.extent = {width, height, 1};
 	image.mipLevels = 1;
 	image.arrayLayers = 1;
 	image.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -542,7 +552,7 @@ void setupDepthStencil(DeviceInfo* deviceInfo,
 	ivInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	ivInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 	ivInfo.format = physDeviceInfo->supportedDepthFormat;
-	ivInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT; 
+	ivInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 	ivInfo.subresourceRange.baseMipLevel = 0;
 	ivInfo.subresourceRange.levelCount = 1;
 	ivInfo.subresourceRange.baseArrayLayer = 0;
@@ -564,10 +574,10 @@ void setupDepthStencil(DeviceInfo* deviceInfo,
 
 
 	SetImageLayout(deviceInfo->setupCmdBuffer,
-		deviceInfo->depthStencil.image,
-		VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
-		VK_IMAGE_LAYOUT_UNDEFINED,
-		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+	               deviceInfo->depthStencil.image,
+	               VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+	               VK_IMAGE_LAYOUT_UNDEFINED,
+	               VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 	ivInfo.image = deviceInfo->depthStencil.image;
 	error = vkCreateImageView(deviceInfo->device, &ivInfo, nullptr, &deviceInfo->depthStencil.view);
 	Assert(error, "could not create image view");
@@ -641,12 +651,12 @@ VkPipelineCache NewPipelineCache(VkDevice logicalDevice)
 }
 
 std::vector<VkFramebuffer> NewFrameBuffer(VkDevice logicalDevice,
-	std::vector<VkImageView>* surfaceViews,
-	VkRenderPass renderPass,
-	VkImageView depthStencilView,
-	uint32_t numBuffers,
-	uint32_t width,
-	uint32_t height)
+                                          std::vector<VkImageView>* surfaceViews,
+                                          VkRenderPass renderPass,
+                                          VkImageView depthStencilView,
+                                          uint32_t numBuffers,
+                                          uint32_t width,
+                                          uint32_t height)
 {
 	std::vector<VkImageView> attach(surfaceViews->size());
 	attach[1] = depthStencilView;
@@ -666,7 +676,6 @@ std::vector<VkFramebuffer> NewFrameBuffer(VkDevice logicalDevice,
 		attach[0] = surfaceViews->at(i);
 		error = vkCreateFramebuffer(logicalDevice, &fbInfo, nullptr, &frameBuffers[i]);
 		Assert(error, "could not create frame buffer");
-
 	}
 	return frameBuffers;
 }
@@ -705,7 +714,6 @@ VkBuffer NewBuffer(VkDevice logicalDevice, uint32_t bufferSize, VkBufferUsageFla
 	VkResult error = vkCreateBuffer(logicalDevice, &bInfo, nullptr, &buffer);
 	Assert(error == VK_SUCCESS, "could not create buffer");
 	return buffer;
-
 }
 
 
@@ -756,7 +764,7 @@ VkMemoryAllocateInfo NewMemoryAllocInfo(VkDevice logicalDevice, VkPhysicalDevice
 	return aInfo;
 }
 
-VkShaderModule NewShaderModule(VkDevice logicalDevice, uint32_t* data , uint32_t dataSize)
+VkShaderModule NewShaderModule(VkDevice logicalDevice, uint32_t* data, uint32_t dataSize)
 {
 	VkShaderModule shaderModule;
 	VkShaderModuleCreateInfo mInfo = {};
@@ -803,8 +811,7 @@ void DestroyPipelineInfo(VkDevice device, PipelineInfo* pipelineInfo)
 
 void DestroyDeviceInfo(DeviceInfo* deviceInfo)
 {
-
-	vkFreeCommandBuffers(deviceInfo->device, deviceInfo->cmdPool, deviceInfo->drawCmdBuffers.size(), deviceInfo->drawCmdBuffers.data());
+	vkFreeCommandBuffers(deviceInfo->device, deviceInfo->cmdPool, (uint32_t)deviceInfo->drawCmdBuffers.size(), deviceInfo->drawCmdBuffers.data());
 	vkFreeCommandBuffers(deviceInfo->device, deviceInfo->cmdPool, 1, &deviceInfo->prePresentCmdBuffer);
 	vkFreeCommandBuffers(deviceInfo->device, deviceInfo->cmdPool, 1, &deviceInfo->postPresentCmdBuffer);
 	vkFreeCommandBuffers(deviceInfo->device, deviceInfo->cmdPool, 1, &deviceInfo->setupCmdBuffer);
@@ -819,22 +826,43 @@ void DestroyDeviceInfo(DeviceInfo* deviceInfo)
 	vkFreeMemory(deviceInfo->device, deviceInfo->depthStencil.mem, nullptr);
 
 	vkDestroyCommandPool(deviceInfo->device, deviceInfo->cmdPool, nullptr);
-	
+
 
 	vkDestroySemaphore(deviceInfo->device, deviceInfo->presentComplete, nullptr);
 	vkDestroySemaphore(deviceInfo->device, deviceInfo->renderComplete, nullptr);
 
 	vkDestroyDevice(deviceInfo->device, nullptr);
-	deviceInfo = {};
+	*deviceInfo = {};
 }
 
-void DestroyDebugInfo(VkInstance vkInstance, DebugInfo* debugInfo)
+void DestroyInstanceInfo(InstanceInfo* instanceInfo)
 {
-	DestroyDebugReportCallbackEXT(vkInstance, debugInfo->debugReport, nullptr);
-	debugInfo = {};
+#if VALIDATION_LAYERS
+	DestroyDebugReportCallbackEXT(instanceInfo->vkInstance, instanceInfo->debugReport, nullptr);
+#endif
+	vkDestroyInstance(instanceInfo->vkInstance, nullptr);
+	*instanceInfo = {};
 }
 
-void DestroyInstance(VkInstance vkInstance)
+void NewInstanceInfo(const char* appName, InstanceInfo* instanceInfo)
 {
-	vkDestroyInstance(vkInstance, nullptr);
+#if VALIDATION_LAYERS
+	instanceInfo->layers = GetInstalledVkLayers();
+	instanceInfo->extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+#endif
+	instanceInfo->extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+	//m->debugInfo.instanceExtList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	instanceInfo->extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+
+	std::vector<const char*> layerChars(instanceInfo->layers.size());
+	for (uint32_t i = 0; i < instanceInfo->layers.size(); i++)
+	{
+		layerChars[i] = instanceInfo->layers[i].layerName;
+	}
+
+	instanceInfo->vkInstance = NewVkInstance(appName, &instanceInfo->extensions, &layerChars);
+#if VALIDATION_LAYERS
+	CreateDebugCallback(instanceInfo->vkInstance, &instanceInfo->debugReport);
+#endif
 }
+

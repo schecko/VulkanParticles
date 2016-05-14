@@ -1,14 +1,13 @@
 #pragma once
 
 #define VK_USE_PLATFORM_WIN32_KHR
-#include <windows.h>
 #include <vulkan/vulkan.h>
 #include "commonvulkan.h"
 #include "commonwindows.h"
 
-struct WindowInfo;
-//todo remove cyclic dependance
 struct DeviceInfo;
+struct PhysDeviceInfo;
+struct WindowInfo;
 
 struct SurfaceInfo
 {
@@ -27,22 +26,28 @@ struct SwapchainInfo
 	uint32_t currentBuffer;
 };
 
-VkSurfaceKHR NewSurface(const WindowInfo* window, VkInstance vkInstance);
+VkSurfaceKHR NewSurface(VkInstance vkInstance, const WindowInfo* window);
 
 uint32_t FindGraphicsQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR surface);
 
 void GetSurfaceColorSpaceAndFormat(VkPhysicalDevice physicalDevice,
 	SurfaceInfo* surfaceInfo);
 
-SwapchainInfo NewSwapchainInfo(
+void NewSwapchainInfo(WindowInfo* windowInfo,
+	const PhysDeviceInfo* physDeviceInfo,
+	const SurfaceInfo* surfaceInfo,
 	const DeviceInfo* deviceInfo,
-	VkPhysicalDevice physDevice,
-	SurfaceInfo* surfaceInfo,
-	uint32_t* width,
-	uint32_t* height);
+	SwapchainInfo* swapchainInfo);
 
-VkResult AcquireNextImage(const DeviceInfo* deviceInfo, SurfaceInfo* surfaceInfo);
+VkResult AcquireNextImage(const DeviceInfo* deviceInfo, SwapchainInfo* swapchainInfo);
 
-VkResult QueuePresent(const DeviceInfo* deviceInfo, const SurfaceInfo* surfaceInfo);
+VkResult QueuePresent(const DeviceInfo* deviceInfo, const SwapchainInfo* swapchainInfo);
 
-void DestroySurfaceInfo(VkInstance vkInstance, VkDevice device, SurfaceInfo* surfaceInfo);
+void DestroySurfaceInfo(VkInstance vkInstance, SurfaceInfo* surfaceInfo);
+
+void NewSurfaceInfo(VkInstance vkInstance, 
+	const WindowInfo* windowInfo, 
+	const PhysDeviceInfo* physDeviceInfo, 
+	SurfaceInfo* surfaceInfo);
+
+void DestroySwapchainInfo(const DeviceInfo* deviceInfo, SwapchainInfo* swapchainInfo);

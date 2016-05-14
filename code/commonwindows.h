@@ -105,7 +105,7 @@ struct File
 
 struct WindowInfo
 {
-	const char* AppName;
+	const char* appName;
 	HWND windowHandle;
 	HINSTANCE exeHandle;
 	uint32_t clientWidth, clientHeight;

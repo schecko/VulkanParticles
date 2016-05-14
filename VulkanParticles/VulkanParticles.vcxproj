@@ -72,8 +72,8 @@
     <IncludePath>D:\appdata\vulkan\1.0.3.1\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\appdata\vulkan\1.0.8.0\Include;D:\scottsdocs\sourcecode\VulkanTriangle\inc;$(PATH);$(IncludePath)</IncludePath>
-    <LibraryPath>D:\appdata\vulkan\1.0.8.0\Bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\appdata\vulkan\1.0.11.1\Include;D:\scottsdocs\sourcecode\VulkanParticles\inc;$(PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>D:\appdata\vulkan\1.0.11.1\Bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

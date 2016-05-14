@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <vector>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "commonvulkan.h"
 #include "commonwindows.h"
 #include "surface.h"
@@ -16,8 +17,8 @@
 
 void PrepareVertexData(const DeviceInfo* deviceInfo, VkPhysicalDeviceMemoryProperties memoryProperties, VertexBuffer* vertexBuffer)
 {
-	size_t vertexBufferSize = vertexBuffer->vPos.size() * sizeof(Vertex);
-	size_t indexBufferSize = vertexBuffer->iPos.size() * sizeof(uint32_t);
+	uint32_t vertexBufferSize = (uint32_t)vertexBuffer->vPos.size() * sizeof(Vertex);
+	uint32_t indexBufferSize = (uint32_t)vertexBuffer->iPos.size() * sizeof(uint32_t);
 
 	StagingBuffers stagingBuffers;
 
@@ -82,9 +83,9 @@ void PrepareVertexData(const DeviceInfo* deviceInfo, VkPhysicalDeviceMemoryPrope
 
 	vertexBuffer->viInfo = {}; //must zero init to ensure pnext is zero (and everything else isnt trash)
 	vertexBuffer->viInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexBuffer->viInfo.vertexBindingDescriptionCount = vertexBuffer->vBindingDesc.size();
+	vertexBuffer->viInfo.vertexBindingDescriptionCount = (uint32_t)vertexBuffer->vBindingDesc.size();
 	vertexBuffer->viInfo.pVertexBindingDescriptions = vertexBuffer->vBindingDesc.data();
-	vertexBuffer->viInfo.vertexAttributeDescriptionCount = vertexBuffer->vBindingAttr.size();
+	vertexBuffer->viInfo.vertexAttributeDescriptionCount = (uint32_t)vertexBuffer->vBindingAttr.size();
 	vertexBuffer->viInfo.pVertexAttributeDescriptions = vertexBuffer->vBindingAttr.data();
 
 }
@@ -141,7 +142,7 @@ VkPipeline NewPipeline(VkDevice logicalDevice, PipelineInfo* pipelineInfo, VkPip
 
 	VkPipelineDynamicStateCreateInfo dInfo = {};
 	dInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dInfo.dynamicStateCount = dEnables.size();
+	dInfo.dynamicStateCount = (uint32_t)dEnables.size();
 	dInfo.pDynamicStates = dEnables.data();
 
 	//depth and stencil
@@ -315,7 +316,7 @@ void BuildCmdBuffers(const DeviceInfo* deviceInfo,  const PipelineInfo* pipeline
 			0, nullptr,
 			1,
 			&barrier);
-		VkResult error = vkEndCommandBuffer(currCmd);
+		error = vkEndCommandBuffer(currCmd);
 		Assert(error, "could not end draw command buffers");
 	}
 
@@ -329,30 +330,20 @@ void Init(MainMemory* m)
 	m->camera = NewCamera();
 	m->timerInfo = NewTimerInfo();
 
-    m->windowInfo = NewWindowInfo(EXE_NAME, &m->input, 1200, 800);
+    m->windowInfo = NewWindowInfo("VulkanParticles", &m->input, 1200, 800);
 	m->input = NewInputInfo(&m->windowInfo);
 	//ShowWindow(m->windowHandle, SW_HIDE);
 
-#if VALIDATION_LAYERS
-	std::vector<VkLayerProperties> layerProps = GetInstalledVkLayers();
-	for (uint32_t i = 0; i < layerProps.size(); i++)
-	{
-		m->debugInfo.instanceLayerList.push_back(layerProps[i].layerName);
-	}
-	m->debugInfo.instanceExtList.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-#endif
-	m->debugInfo.instanceExtList.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	//m->debugInfo.instanceExtList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	m->debugInfo.instanceExtList.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+	NewInstanceInfo(m->windowInfo.appName, &m->instanceInfo);
+	NewPhysDeviceInfo(m->instanceInfo.vkInstance, &m->physDeviceInfo);
 
+	NewSurfaceInfo(m->instanceInfo.vkInstance, &m->windowInfo, &m->physDeviceInfo, &m->surfaceInfo);
+	NewDeviceInfo(&m->windowInfo, &m->physDeviceInfo, &m->surfaceInfo, &m->deviceInfo);
+	NewSwapchainInfo(&m->windowInfo, &m->physDeviceInfo, &m->surfaceInfo, &m->deviceInfo, &m->swapchainInfo);
+	SetupCommandBuffers(&m->deviceInfo, m->swapchainInfo.imageCount);
 
-    m->vkInstance = NewVkInstance(EXE_NAME, &m->debugInfo.instanceLayerList, &m->debugInfo.instanceExtList);
-#if VALIDATION_LAYERS
-	CreateDebugCallback(m->vkInstance, &m->debugInfo.debugReport);
-#endif
+	/*
     m->surfaceInfo.surface = NewSurface(&m->windowInfo, m->vkInstance);
-
-
     uint32_t gpuCount;
     std::vector<VkPhysicalDevice> physicalDevices = EnumeratePhysicalDevices(m->vkInstance, &gpuCount);
     m->physDeviceInfo.physicalDevice = physicalDevices[0];
@@ -397,7 +388,7 @@ void Init(MainMemory* m)
 		&m->physDeviceInfo,
 		m->windowInfo.clientWidth,
 		m->windowInfo.clientHeight);
-
+		*/
 
 
 	m->pipelineInfo.renderPass = NewRenderPass(m->deviceInfo.device, 
@@ -406,10 +397,10 @@ void Init(MainMemory* m)
 
 	m->pipelineInfo.pipelineCache = NewPipelineCache(m->deviceInfo.device);
 	m->deviceInfo.frameBuffers = NewFrameBuffer(m->deviceInfo.device,
-		&m->surfaceInfo.views, 
+		&m->swapchainInfo.views, 
 		m->pipelineInfo.renderPass, 
 		m->deviceInfo.depthStencil.view, 
-		m->surfaceInfo.imageCount, 
+		m->swapchainInfo.imageCount, 
 		m->windowInfo.clientWidth, 
 		m->windowInfo.clientHeight);
 	//TODO why does the setup cmd buffer need to be flushed and recreated?
@@ -434,23 +425,23 @@ void Init(MainMemory* m)
 		m->windowInfo.clientWidth, 
 		m->windowInfo.clientHeight, 
 		-2.0f, 
-		glm::vec3(40.0f, 0.0f, 0.0f));
+		{ 40.0f, 0.0f, 0.0f });
 
 	m->pipelineInfo.descriptorSetLayout = NewDescriptorSetLayout(m->deviceInfo.device, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
 	m->pipelineInfo.pipelineLayout = NewPipelineLayout(m->deviceInfo.device, m->pipelineInfo.descriptorSetLayout);
 	m->pipelineInfo.pipeline = NewPipeline(m->deviceInfo.device, &m->pipelineInfo, &m->vertexBuffer.viInfo);
 	m->pipelineInfo.descriptorPool = PrepareDescriptorPool(m->deviceInfo.device);
 	m->pipelineInfo.descriptorSet = NewDescriptorSet(m->deviceInfo.device, &m->pipelineInfo, m->camera.desc);
-	BuildCmdBuffers(&m->deviceInfo, &m->pipelineInfo, &m->surfaceInfo, &m->vertexBuffer, m->windowInfo.clientWidth, m->windowInfo.clientHeight);
+	BuildCmdBuffers(&m->deviceInfo, &m->pipelineInfo, &m->swapchainInfo, &m->vertexBuffer, m->windowInfo.clientWidth, m->windowInfo.clientHeight);
 
 }
 
 
-void Render(const DeviceInfo* deviceInfo, SurfaceInfo* surfaceInfo)
+void Render(const DeviceInfo* deviceInfo, SwapchainInfo* swapchainInfo)
 {
 	vkDeviceWaitIdle(deviceInfo->device);
 	VkResult error;
-	error = AcquireNextImage(deviceInfo, surfaceInfo);
+	error = AcquireNextImage(deviceInfo, swapchainInfo);
 	Assert(error, "could not acquire next image in update and render");
 
 	VkImageMemoryBarrier barrier = {};
@@ -462,7 +453,7 @@ void Render(const DeviceInfo* deviceInfo, SurfaceInfo* surfaceInfo)
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-	barrier.image = surfaceInfo->images[surfaceInfo->currentBuffer];
+	barrier.image = swapchainInfo->images[swapchainInfo->currentBuffer];
 
 	VkCommandBufferBeginInfo bInfo = {};
 	bInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -499,14 +490,14 @@ void Render(const DeviceInfo* deviceInfo, SurfaceInfo* surfaceInfo)
 	sInfo.waitSemaphoreCount = 1;
 	sInfo.pWaitSemaphores = &deviceInfo->presentComplete;
 	sInfo.commandBufferCount = 1;
-	sInfo.pCommandBuffers = &deviceInfo->drawCmdBuffers[surfaceInfo->currentBuffer];
+	sInfo.pCommandBuffers = &deviceInfo->drawCmdBuffers[swapchainInfo->currentBuffer];
 	sInfo.signalSemaphoreCount = 1;
 	sInfo.pSignalSemaphores = &deviceInfo->renderComplete;
 
 	error = vkQueueSubmit(deviceInfo->queue, 1, &sInfo, nullptr);
 	Assert(error, "could not submit cmd buffer in update and render");
 
-	error = QueuePresent(deviceInfo, surfaceInfo);
+	error = QueuePresent(deviceInfo, swapchainInfo);
 	Assert(error, "could not present queue in update and render");
 
 	vkDeviceWaitIdle(deviceInfo->device);
@@ -589,12 +580,9 @@ void Quit(MainMemory* m)
 	DestroyTimerInfo(&m->timerInfo);
     DestroyWindowInfo(&m->windowInfo);
 	DestroyPipelineInfo(m->deviceInfo.device, &m->pipelineInfo);
-	DestroySurfaceInfo(m->vkInstance, m->deviceInfo.device, &m->surfaceInfo);
+	DestroySurfaceInfo(m->instanceInfo.vkInstance, &m->surfaceInfo);
 	DestroyDeviceInfo(&m->deviceInfo);
-#if VALIDATION_LAYERS
-	DestroyDebugInfo(m->vkInstance, &m->debugInfo);
-#endif
-	DestroyInstance(m->vkInstance);
+	DestroyInstanceInfo(&m->instanceInfo);
 }
 
 
@@ -608,7 +596,7 @@ int main(int argv, char** argc)
 		Tick(&m->timerInfo);
         PollEvents(&m->windowInfo);
 		Update(m);
-        Render(&m->deviceInfo, &m->surfaceInfo);
+        Render(&m->deviceInfo, &m->swapchainInfo);
 		Tock(&m->timerInfo);
 		Sleep(&m->timerInfo, 60);
     }
