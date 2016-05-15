@@ -366,11 +366,11 @@ VkCommandBuffer NewSetupCommandBuffer(VkDevice logicalDevice, VkCommandPool cmdP
 	bufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	bufferAllocInfo.commandBufferCount = 1;
 
-
 	error = vkAllocateCommandBuffers(logicalDevice, &bufferAllocInfo, &setupBuffer);
 	Assert(error, "could not create setup command buffer");
 	VkCommandBufferBeginInfo setupBeginInfo = {};
 	setupBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	setupBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	error = vkBeginCommandBuffer(setupBuffer, &setupBeginInfo);
 	Assert(error, "could not begin setup command buffer.");
 	return setupBuffer;
@@ -826,17 +826,16 @@ void DestroyPipelineInfo(VkDevice device, PipelineInfo* pipelineInfo)
 {
 	vkDestroyDescriptorPool(device, pipelineInfo->descriptorPool, nullptr);
 	vkDestroyPipeline(device, pipelineInfo->pipeline, nullptr);
-	for (auto& shaderModule : pipelineInfo->shaderModules)
+
+	for (uint32_t i = 0; i < pipelineInfo->shaderModules.size(); i++)
 	{
-		vkDestroyShaderModule(device, shaderModule, nullptr);
+		VkShaderModule module = pipelineInfo->shaderModules.at(i);
+		vkDestroyShaderModule(device, module, nullptr);
 	}
 	vkDestroyPipelineLayout(device, pipelineInfo->pipelineLayout, nullptr);
 	vkDestroyDescriptorSetLayout(device, pipelineInfo->descriptorSetLayout, nullptr);
 	vkDestroyPipelineCache(device, pipelineInfo->pipelineCache, nullptr);
 	vkDestroyRenderPass(device, pipelineInfo->renderPass, nullptr);
-
-
-	pipelineInfo = {};
 }
 
 void DestroyDeviceInfo(DeviceInfo* deviceInfo)
@@ -862,7 +861,6 @@ void DestroyDeviceInfo(DeviceInfo* deviceInfo)
 	vkDestroySemaphore(deviceInfo->device, deviceInfo->renderComplete, nullptr);
 
 	vkDestroyDevice(deviceInfo->device, nullptr);
-	*deviceInfo = {};
 }
 
 void DestroyInstanceInfo(InstanceInfo* instanceInfo)
@@ -871,7 +869,6 @@ void DestroyInstanceInfo(InstanceInfo* instanceInfo)
 	DestroyDebugReportCallbackEXT(instanceInfo->vkInstance, instanceInfo->debugReport, nullptr);
 #endif
 	vkDestroyInstance(instanceInfo->vkInstance, nullptr);
-	*instanceInfo = {};
 }
 
 void NewInstanceInfo(const char* appName, InstanceInfo* instanceInfo)
