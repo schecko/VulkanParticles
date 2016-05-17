@@ -246,7 +246,7 @@ void Sleep(TimerInfo* timerInfo, int32_t desiredFps)
 {
 	int32_t desiredFrameDurationMilliSec = 1000 / desiredFps;
 	int32_t frameTimeRemainingMilliSec = desiredFrameDurationMilliSec - timerInfo->frameTimeMilliSec;
-	if( frameTimeRemainingMilliSec > 1 && frameTimeRemainingMilliSec < desiredFrameDurationMilliSec)
+	if( frameTimeRemainingMilliSec >= 1)
 	{
 		//frameRemaindertime is greater than clock resolution AND positive, so it can sleep.
 		//calculate the sleeptime which is the lowest granularity value of frameRemaindertime that will still guarantee that

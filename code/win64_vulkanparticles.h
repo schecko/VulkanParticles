@@ -10,19 +10,41 @@
 #include "commonwindows.h"
 #include "camera.h"
 
+#define Kibibytes(Value) ((Value)*1024LL)
+#define Mebibytes(Value) (Kibibytes(Value)*1024LL)
+#define Gibibytes(Value) (Mebibytes(Value)*1024LL)
+#define Terabytes(Value) (Gibibytes(Value)*1024LL)
+
 static const uint32_t VERTEX_BUFFER_BIND_ID = 0;
 static const float CAMERA_SPEED = 0.001f;
-#define VALIDATION_LAYERS true
-#define VALIDATION_MESSAGES true
+#define VALIDATION_LAYERS false
+#define VALIDATION_MESSAGES false
 #define DEBUGGING true
 
+static const uint32_t POOLPAGESIZE = Kibibytes(1);
 
+enum AssetType
+{
+	nullAsset,
+	shaderAsset,
+	textureAsset
+};
 
 //vertex data stored on ram
 struct Vertex
 {
 	float pos[3];
 	float col[3];
+};
+
+struct AssetNode
+{
+	uint32_t* prev;
+	uint32_t* next;
+	uint32_t* data;
+	AssetType assetType;
+	uint32_t dataSize;
+	uint32_t numPages;
 };
 
 
@@ -45,7 +67,12 @@ struct VertexBuffer
 
 };
 
+struct PoolInfo
+{
+	uint32_t* poolStart;
+	uint32_t poolSize;
 
+};
 
 //main struct, pretty much holds everything
 struct MainMemory
@@ -67,7 +94,7 @@ struct MainMemory
 
 	Camera camera;
 	PipelineInfo pipelineInfo;
-
+	PoolInfo poolInfo;
 
 
 };

@@ -5,6 +5,32 @@
 #include "win64_vulkanparticles.h"
 #include "util.h"
 
+void* PoolAlloc(const PoolInfo* poolInfo, const uint32_t dataSize)
+{
+	for (AssetNode* i = (AssetNode*)poolInfo->poolStart; (uint32_t*)i < poolInfo->poolStart + POOLPAGESIZE; i++)
+	{
+		if(!i->data)
+		{
+			//determine number of pages needed
+			uint32_t requiredPages = (dataSize / POOLPAGESIZE) + 1; //TODO deal with files with exact same size as page
+			if(i->numPages > requiredPages)
+			{
+				i->data;
+		
+			}
+		}
+	}
+
+	//TODO if above fails then need to evict something else to make space
+	return nullptr;
+}
+
+void InitPoolNodes(const PoolInfo* poolInfo)
+{
+	AssetNode* poolStart = (AssetNode*)poolInfo->poolStart;
+	poolStart->numPages = poolInfo->poolSize / POOLPAGESIZE;
+}
+
 
 void PrepareVertexData(const DeviceInfo* deviceInfo, VkPhysicalDeviceMemoryProperties memoryProperties, VertexBuffer* vertexBuffer)
 {

@@ -9,10 +9,7 @@
 #include "util.h"
 #include "vulkanparticles.h"
 
-#define Kilobytes(Value) ((Value)*1024LL)
-#define Megabytes(Value) (Kilobytes(Value)*1024LL)
-#define Gigabytes(Value) (Megabytes(Value)*1024LL)
-#define Terabytes(Value) (Gigabytes(Value)*1024LL)
+
 
 void* MemAlloc(uint32_t memorySize)
 {
@@ -51,7 +48,10 @@ void PollEvents(const WindowInfo* windowInfo)
 
 int main(int argv, char** argc)
 {
-	MainMemory* m = (MainMemory*)MemAlloc(sizeof(MainMemory) + Gigabytes(1));
+	MainMemory* m = (MainMemory*)MemAlloc(sizeof(MainMemory));
+	m->poolInfo.poolSize = Gibibytes(1);
+	m->poolInfo.poolStart = MemAlloc(m->poolInfo.poolSize);
+
     Init(m);
     while (m->input.running)
     {
@@ -60,7 +60,7 @@ int main(int argv, char** argc)
 		Update(m);
         Render(&m->deviceInfo, &m->swapchainInfo);
 		Tock(&m->timerInfo);
-#if DEBUGGING | VALIDATION_MESSAGES | VALIDATION_LAYERS
+#if DEBUGGING || VALIDATION_MESSAGES || VALIDATION_LAYERS
 		Sleep(&m->timerInfo, 15);
 #else
 		Sleep(&m->timerInfo, 60);
