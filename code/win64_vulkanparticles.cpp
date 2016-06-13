@@ -49,10 +49,10 @@ void PollEvents(const WindowInfo* windowInfo)
 int main(int argv, char** argc)
 {
 	MainMemory* m = (MainMemory*)MemAlloc(sizeof(MainMemory));
-	m->poolInfo.poolSize = Gibibytes(1);
-	m->poolInfo.poolStart = MemAlloc(m->poolInfo.poolSize);
 
-    Init(m);
+	uint32_t poolSize = Gibibytes(1);
+
+    Init(m, MemAlloc(poolSize), poolSize);
     while (m->input.running)
     {
 		Tick(&m->timerInfo);

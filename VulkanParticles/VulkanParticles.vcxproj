@@ -72,8 +72,8 @@
     <IncludePath>D:\appdata\vulkan\1.0.3.1\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\appdata\vulkan\1.0.11.1\Include;D:\scottsdocs\sourcecode\VulkanParticles\inc;$(PATH);$(IncludePath)</IncludePath>
-    <LibraryPath>D:\appdata\vulkan\1.0.11.1\Bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\appdata\vulkan\1.0.8.0\Include;D:\scottsdocs\sourcecode\VulkanParticles\inc;$(PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>D:\appdata\vulkan\1.0.8.0\Bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -127,6 +127,7 @@
     <ClCompile Include="..\code\commonwindows.cpp" />
     <ClCompile Include="..\code\surface.cpp" />
     <ClCompile Include="..\code\timer.cpp" />
+    <ClCompile Include="..\code\vulkanparticles.cpp" />
     <ClCompile Include="..\code\win64_vulkanparticles.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +137,7 @@
     <ClInclude Include="..\code\surface.h" />
     <ClInclude Include="..\code\timer.h" />
     <ClInclude Include="..\code\util.h" />
+    <ClInclude Include="..\code\vulkanparticles.h" />
     <ClInclude Include="..\code\win64_vulkanparticles.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -21,13 +21,16 @@ static const float CAMERA_SPEED = 0.001f;
 #define VALIDATION_MESSAGES false
 #define DEBUGGING true
 
-static const uint32_t POOLPAGESIZE = Kibibytes(1);
+static const uint32_t SMALLPOOLPAGESIZE = 256;
+static const uint32_t MEDIUMPOOLPAGESIZE = Kibibytes(1);
+static const uint32_t BIGPOOLPAGESIZE = Mebibytes(1);
 
 enum AssetType
 {
 	nullAsset,
 	shaderAsset,
-	textureAsset
+	textureAsset,
+	vertexAsset
 };
 
 //vertex data stored on ram
@@ -37,13 +40,29 @@ struct Vertex
 	float col[3];
 };
 
+
+//for assets from files such as textures or models
 struct AssetNode
 {
-	uint32_t* prev;
+	//if not allowing files of multiple page sizes
+	//next and prev might not be needed
 	uint32_t* next;
-	uint32_t* data;
+	uint32_t* prev;
+	
 	AssetType assetType;
+	char assetName[20];
 	uint32_t dataSize;
+	uint32_t numPages;
+};
+
+//for vectors, arrays, maps, etc
+struct DataNode
+{
+	//next MUST BE FIRST VALUE
+	uint32_t* next;
+	//****
+	uint32_t* prev;
+	uint32_t dataSize; //todo datasize of numpages one or the other?
 	uint32_t numPages;
 };
 
@@ -69,9 +88,14 @@ struct VertexBuffer
 
 struct PoolInfo
 {
-	uint32_t* poolStart;
-	uint32_t poolSize;
-
+	uint32_t totalPoolSize;
+	uint32_t* subPool[3];
+	uint32_t subPoolSize[3];
+	uint32_t* nextEmptyNode[3];
+#if DEBUGGING
+	uint32_t pagesUsed[3];
+	uint32_t actualSpaceused[3];
+#endif
 };
 
 //main struct, pretty much holds everything

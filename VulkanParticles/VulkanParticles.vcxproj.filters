@@ -1,60 +1,61 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
+    <Filter Include="platform dependant">
+      <UniqueIdentifier>{79e06a7b-dd8a-41e9-b46b-ebe9a42716da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform independant">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\code\commonvulkan.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\code\commonwindows.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\code\surface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\code\camera.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>platform independant</Filter>
     </ClCompile>
     <ClCompile Include="..\code\timer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>platform independant</Filter>
     </ClCompile>
     <ClCompile Include="..\code\win64_vulkanparticles.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>platform dependant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\code\commonwindows.cpp">
+      <Filter>platform dependant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\code\commonvulkan.cpp">
+      <Filter>platform independant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\code\surface.cpp">
+      <Filter>platform dependant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\code\vulkanparticles.cpp">
+      <Filter>platform independant</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\code\commonvulkan.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\code\commonwindows.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\code\util.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\code\surface.h">
-      <Filter>Source Files</Filter>
+      <Filter>platform independant</Filter>
     </ClInclude>
     <ClInclude Include="..\code\camera.h">
-      <Filter>Source Files</Filter>
+      <Filter>platform independant</Filter>
     </ClInclude>
     <ClInclude Include="..\code\timer.h">
-      <Filter>Source Files</Filter>
+      <Filter>platform independant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\code\vulkanparticles.h">
+      <Filter>platform independant</Filter>
     </ClInclude>
     <ClInclude Include="..\code\win64_vulkanparticles.h">
-      <Filter>Source Files</Filter>
+      <Filter>platform dependant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\code\commonwindows.h">
+      <Filter>platform dependant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\code\commonvulkan.h">
+      <Filter>platform independant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\code\surface.h">
+      <Filter>platform dependant</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
