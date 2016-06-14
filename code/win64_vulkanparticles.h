@@ -14,12 +14,13 @@
 #define Mebibytes(Value) (Kibibytes(Value)*1024LL)
 #define Gibibytes(Value) (Mebibytes(Value)*1024LL)
 #define Terabytes(Value) (Gibibytes(Value)*1024LL)
+#define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 
 static const uint32_t VERTEX_BUFFER_BIND_ID = 0;
 static const float CAMERA_SPEED = 0.001f;
 #define VALIDATION_LAYERS false
 #define VALIDATION_MESSAGES false
-#define DEBUGGING true
+#define DEBUGGING false
 
 static const uint32_t SMALLPOOLPAGESIZE = 256;
 static const uint32_t MEDIUMPOOLPAGESIZE = Kibibytes(1);
@@ -86,16 +87,20 @@ struct VertexBuffer
 
 };
 
+struct SubPoolInfo
+{
+	uint32_t* start;
+	uint32_t totalSize;
+	uint32_t* nextEmpty;
+	uint32_t pagesUsed;
+	uint32_t actualSpaceUsed;
+	uint32_t pageSize;
+};
+
 struct PoolInfo
 {
 	uint32_t totalPoolSize;
-	uint32_t* subPool[3];
-	uint32_t subPoolSize[3];
-	uint32_t* nextEmptyNode[3];
-#if DEBUGGING
-	uint32_t pagesUsed[3];
-	uint32_t actualSpaceused[3];
-#endif
+	SubPoolInfo subPool[3];
 };
 
 //main struct, pretty much holds everything

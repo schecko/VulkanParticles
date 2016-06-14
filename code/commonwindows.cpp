@@ -84,7 +84,7 @@ LRESULT CALLBACK MessageHandler(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP)
 }
 
 
-WindowInfo NewWindowInfo(const char* appName, void* pointer, uint32_t clientWidth, uint32_t clientHeight)
+WindowInfo NewWindowInfo(const char* appName, void* pointer, uint32_t clientWidth, uint32_t clientHeight, bool show)
 {
 
 	WindowInfo windowInfo;
@@ -123,7 +123,14 @@ WindowInfo NewWindowInfo(const char* appName, void* pointer, uint32_t clientWidt
 
 	Assert(windowHandle != nullptr, "could not create a windows window");
 
-	ShowWindow(windowHandle, SW_SHOW);
+	if(show)
+	{
+		ShowWindow(windowHandle, SW_SHOW);
+	}else
+	{
+		ShowWindow(windowHandle, SW_HIDE);
+	}
+
 
 	windowInfo.appName = appName;
 	windowInfo.windowHandle = windowHandle;

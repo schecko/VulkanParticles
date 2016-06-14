@@ -139,7 +139,7 @@ InputInfo NewInputInfo(const WindowInfo* windowInfo);
 
 //create a windows window, pass a pointer to a struct for input events
 //returns a handle to the created window.
-WindowInfo NewWindowInfo(const char* appName, void* pointer, uint32_t clientWidth, uint32_t clientHeight);
+WindowInfo NewWindowInfo(const char* appName, void* pointer, uint32_t clientWidth, uint32_t clientHeight, bool show);
 
 
 //returns a struct containing the pointer to the data and data size of the file specified by its absolute path

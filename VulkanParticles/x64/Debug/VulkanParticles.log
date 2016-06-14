@@ -1,3 +1,4 @@
-﻿  vulkanparticles.cpp
+﻿  win64_vulkanparticles.cpp
+d:\scottsdocs\sourcecode\vulkanparticles\code\win64_vulkanparticles.cpp(19): warning C4800: 'void *': forcing value to bool 'true' or 'false' (performance warning)
   VulkanParticles.vcxproj -> D:\scottsdocs\sourcecode\VulkanParticles\VulkanParticles\x64\Debug\VulkanParticles.exe
   VulkanParticles.vcxproj -> D:\scottsdocs\sourcecode\VulkanParticles\VulkanParticles\x64\Debug\VulkanParticles.pdb (Partial PDB)

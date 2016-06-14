@@ -12,36 +12,19 @@ enum PoolType
 	bigPool = 2
 };
 
-void* FindNextAvailableNode(PoolInfo* poolInfo, PoolType poolType)
+void* FindNextAvailableNode(SubPoolInfo* subPool)
 {
 	void* dataLocation = nullptr;
-	if(((AssetNode*)(poolInfo->nextEmptyNode[poolType]))->dataSize == 0)
+	if(((AssetNode*)(subPool->nextEmpty))->dataSize == 0)
 	{
 		//the next empty node's data is empty, so it can be used
-		dataLocation = poolInfo->nextEmptyNode[poolType];
-		switch(poolType)
-		{
-			case smallPool:
-			{
-				poolInfo->nextEmptyNode[poolType] = poolInfo->nextEmptyNode[poolType] + SMALLPOOLPAGESIZE;
-			} break;
-			case mediumPool:
-			{
-				poolInfo->nextEmptyNode[poolType] = poolInfo->nextEmptyNode[poolType] + MEDIUMPOOLPAGESIZE;
-			} break;
-			case bigPool:
-			{
-				poolInfo->nextEmptyNode[poolType] = poolInfo->nextEmptyNode[poolType] + BIGPOOLPAGESIZE;
-			} break;
-			default:
-			{
-				Assert(0, "findnextavailablenode not provided a proper poolType");
-			}
-		}
-		if (poolInfo->nextEmptyNode[poolType] >= poolInfo->subPool[poolType] + poolInfo->subPoolSize[poolType])
+		dataLocation = subPool->nextEmpty;
+		subPool->nextEmpty = subPool->nextEmpty + subPool->pageSize;
+
+		if (subPool->nextEmpty >= subPool->start + subPool->totalSize)
 		{
 			//return back to start of the pool
-			poolInfo->nextEmptyNode[poolType] = poolInfo->subPool[poolType];
+			subPool->nextEmpty = subPool->start;
 		}
 	} else
 	{
@@ -58,40 +41,30 @@ void* FindNextAvailableNode(PoolInfo* poolInfo, PoolType poolType)
 
 void DeleteFromPool(PoolInfo* poolInfo, uint32_t* nodeToDelete)
 {
-	Assert(nodeToDelete >= poolInfo->subPool[0] && nodeToDelete <= poolInfo->subPool[0] + poolInfo->totalPoolSize, "attempting to delete a pointer not inside the memory pool");
+	Assert(nodeToDelete >= poolInfo->subPool[0].start && nodeToDelete <= poolInfo->subPool[0].start + poolInfo->totalPoolSize, "attempting to delete a pointer not inside the memory pool");
 
 }
 
 void* AllocFromPool(PoolInfo* poolInfo, const uint32_t dataSize)
 {
-	void* dataLocation = nullptr;
+	uint32_t desiredPool = 0;
 	//find an available node
 	uint32_t SizePlusHeader = dataSize + sizeof(AssetNode);
-	if(SizePlusHeader < SMALLPOOLPAGESIZE)
+	if(SizePlusHeader < poolInfo->subPool[0].pageSize)
 	{
-		dataLocation = FindNextAvailableNode(poolInfo, smallPool);
-#if DEBUGGING
-		poolInfo->pagesUsed[smallPool]++;
-		poolInfo->actualSpaceused[smallPool] += dataSize;
-#endif
-	} else if (SizePlusHeader < MEDIUMPOOLPAGESIZE)
+		desiredPool = 0;
+	} else if (SizePlusHeader < poolInfo->subPool[1].pageSize)
 	{
-		dataLocation = FindNextAvailableNode(poolInfo, mediumPool);
-#if DEBUGGING
-		poolInfo->pagesUsed[mediumPool]++;
-		poolInfo->actualSpaceused[mediumPool] += dataSize;
-#endif
-	} else if (SizePlusHeader < BIGPOOLPAGESIZE)
+		desiredPool = 1;
+	} else if (SizePlusHeader < poolInfo->subPool[2].pageSize)
 	{
-		dataLocation = FindNextAvailableNode(poolInfo, bigPool);
-#if DEBUGGING
-		poolInfo->pagesUsed[bigPool]++;
-		poolInfo->actualSpaceused[bigPool] += dataSize;
-#endif
+		desiredPool = 2;
 	}
-	//initialize the node
+	
+	poolInfo->subPool[desiredPool].pagesUsed++;
+	poolInfo->subPool[desiredPool].actualSpaceUsed += dataSize;
 
-	return dataLocation;
+	return FindNextAvailableNode(&poolInfo->subPool[desiredPool]);;
 }
 
  PoolInfo NewPool(uint32_t* poolStart, uint32_t poolSize)
@@ -105,22 +78,22 @@ void* AllocFromPool(PoolInfo* poolInfo, const uint32_t dataSize)
 	//when debugging, the memory pool will have a small buffer at each and which will be set to zero
 	//and periodically will be checked if anything has written to it
 	pool.totalPoolSize = poolSize * 3/4; 
-	pool.subPool[0] = poolStart + poolSize / 8;
+	pool.subPool[0].start = poolStart + poolSize / 8;
 #else
 	pool.totalPoolSize = poolSize;
-	pool.subPool[0] = poolStart;
+	pool.subPool[0].start = poolStart;
 #endif
 	
-	pool.subPoolSize[0] = pool.totalPoolSize / 3;
-	pool.subPoolSize[1] = pool.totalPoolSize / 3;
-	pool.subPoolSize[2] = pool.totalPoolSize / 3;
+	pool.subPool[0].totalSize = pool.totalPoolSize / 3;
+	pool.subPool[1].totalSize = pool.totalPoolSize / 3;
+	pool.subPool[2].totalSize = pool.totalPoolSize / 3;
 
 	//initialize starting pool with 3 pointers, one for each page size starting at the previous ones finish
-	pool.nextEmptyNode[0] = pool.subPool[0];
-	pool.subPool[1] = pool.subPool[0] + pool.subPoolSize[0];
-	pool.nextEmptyNode[1] = pool.subPool[1];
-	pool.subPool[2] = pool.subPool[1] + pool.subPoolSize[1];
-	pool.nextEmptyNode[2] = pool.subPool[2];
+	pool.subPool[0].nextEmpty = pool.subPool[0].start;
+	pool.subPool[1].start = pool.subPool[0].start + pool.subPool[0].totalSize;
+	pool.subPool[1].nextEmpty = pool.subPool[1].start;
+	pool.subPool[2].start = pool.subPool[1].start + pool.subPool[1].totalSize;
+	pool.subPool[2].nextEmpty = pool.subPool[2].start;
 
 	return pool;
 }
@@ -441,7 +414,7 @@ void Init(MainMemory* m, void* poolStart, uint32_t poolSize)
 	m->camera = NewCamera();
 	m->timerInfo = NewTimerInfo();
 
-	m->windowInfo = NewWindowInfo("VulkanParticles", &m->input, 1200, 800);
+	m->windowInfo = NewWindowInfo("VulkanParticles", &m->input, 1200, 800, false);
 	m->input = NewInputInfo(&m->windowInfo);
 	//ShowWindow(m->windowHandle, SW_HIDE);
 
