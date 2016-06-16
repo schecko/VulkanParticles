@@ -26,6 +26,9 @@ static const uint32_t SMALLPOOLPAGESIZE = 256;
 static const uint32_t MEDIUMPOOLPAGESIZE = Kibibytes(1);
 static const uint32_t BIGPOOLPAGESIZE = Mebibytes(1);
 
+#define PreventWriteInstructionsFromCrossingThisLine _WriteBarrier(); _mm_sfence(); 
+#define PreventReadInstructionsFromCrossingThisLine _ReadBarrier();
+
 enum AssetType
 {
 	nullAsset,
@@ -102,6 +105,7 @@ struct PoolInfo
 	uint32_t totalPoolSize;
 	SubPoolInfo subPool[3];
 };
+
 
 //main struct, pretty much holds everything
 struct MainMemory

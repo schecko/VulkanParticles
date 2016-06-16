@@ -53,59 +53,99 @@ struct WorkQueueEntry
 	char* stringToPrint;
 };
 
-static uint32_t volatile nextEntryToPrint;
-static uint32_t volatile entryCount;
-static uint32_t volatile entryCompletionCount;
-WorkQueueEntry workEntries[256];
-
-#define PreventWriteInstructionsFromCrossingThisLine _WriteBarrier(); /*_mm_sfence(); might or might not be necessary for x86*/
-#define PreventReadInstructionsFromCrossingThisLine _ReadBarrier();
-
-void PushString(HANDLE semaphoreHandle, char* str)
+struct WorkQueue
 {
-	Assert(entryCount < 256, "too many entries");
-	WorkQueueEntry* entry = workEntries + entryCount;
-	entry->stringToPrint = str;
-	PreventWriteInstructionsFromCrossingThisLine //this line stops the compiler from letting the entrycount++ instruction 
-	//move above this line durig optimization
-	entryCount++; //entrycount must be incremented AFTER data is placed into the work queue
-	//because between the lines another thread could snatch up garbage
-	//since it only checked for entry count being larger than nextentry to print
-	ReleaseSemaphore(semaphoreHandle, 1, nullptr);
-}
+	uint32_t volatile nextEntryToComplete;
+	uint32_t volatile entryCount;
+	uint32_t volatile entryCompletionCount;
+	HANDLE semaphoreHandle;
+};
 
 struct ThreadInfo
 {
-	HANDLE semaphoreHandle;
 	int logicalThreadIndex;
+	WorkQueue* workQueue;
 };
+
+
+
+
+WorkQueueEntry workEntries[256];
+
+
+
+void AddWorkQueueEntry(WorkQueue* workQueue)
+{
+	Assert(workQueue->entryCount < 256, "too many entries");
+	PreventWriteInstructionsFromCrossingThisLine //this line stops the compiler from letting the entrycount++ instruction 
+	//move above this line durig optimization
+	++workQueue->entryCount; //entrycount must be incremented AFTER data is placed into the work queue
+	//because between the lines another thread could snatch up garbage
+	//since it only checked for entry count being larger than nextentry to print
+	ReleaseSemaphore(workQueue->semaphoreHandle, 1, nullptr);
+}
+
+struct WorkQueueItem
+{
+	bool isValid;
+	uint32_t index;
+};
+
+WorkQueueItem GetNextWorkQueueItem(WorkQueue* workQueue)
+{
+	WorkQueueItem result;
+	result.isValid = false;
+	if (workQueue->nextEntryToComplete < workQueue->entryCount)
+	{
+		result.index = InterlockedIncrement(&workQueue->nextEntryToComplete) - 1;
+		result.isValid = true;
+		PreventReadInstructionsFromCrossingThisLine
+	}
+	return result;
+}
+
+void MarkQueueItemComplete(WorkQueue* workQueue, WorkQueueItem* item)
+{
+	InterlockedIncrement(&workQueue->entryCompletionCount);
+}
+
+inline bool DoThreadWork(WorkQueue* workQueue, uint32_t logicalThreadIndex)
+{
+	WorkQueueItem item = GetNextWorkQueueItem(workQueue);
+	if(item.isValid)
+	{
+		//do stuff
+		char buffer[256];
+		WorkQueueEntry* entry = workEntries + item.index;
+		wsprintf(buffer, "thread %u: %s\n", logicalThreadIndex, entry->stringToPrint);
+		printf(buffer);
+		MarkQueueItemComplete(workQueue, &item);
+	}
+	return item.isValid;
+}
+
+bool QueueWorkStillExists(WorkQueue* workQueue)
+{
+	return (workQueue->entryCount != workQueue->entryCompletionCount);
+}
+
+void PushString(WorkQueue* workQueue, char* str)
+{
+	uint32_t index = workQueue->nextEntryToComplete;
+	workEntries[index].stringToPrint = str;
+	AddWorkQueueEntry(workQueue);
+}
+
 
 DWORD WINAPI ThreadProc(LPVOID lp)
 {
 	ThreadInfo* threadInfo = (ThreadInfo*)lp;
 	for (;;)
 	{
-		if(nextEntryToPrint < entryCount)
-		{
-			uint32_t entryIndex = InterlockedIncrement(&nextEntryToPrint) - 1;
-
-			PreventReadInstructionsFromCrossingThisLine
-			WorkQueueEntry* entry = workEntries + entryIndex;
-			Assert(entry->stringToPrint != "", "empty string printed");
-			char buffer[256];
-#if 0
-			StringCbPrintf(buffer, 256, "thread %u: %s\n", threadInfo->logicalThreadIndex, entry->stringToPrint);
-#else
-			wsprintf(buffer, "thread %u: %s\n", threadInfo->logicalThreadIndex, entry->stringToPrint);
-#endif
-
-			printf(buffer);
-			InterlockedIncrement(&entryCompletionCount);
-			//entry->stringToPrint = "";
-		} else
+		if(!DoThreadWork(threadInfo->workQueue, threadInfo->logicalThreadIndex))
 		{
 			//put thread to sleep
-			WaitForSingleObjectEx(threadInfo->semaphoreHandle, INFINITE, false);
+			WaitForSingleObjectEx(threadInfo->workQueue->semaphoreHandle, INFINITE, false);
 		}
 
 	}
@@ -113,14 +153,16 @@ DWORD WINAPI ThreadProc(LPVOID lp)
 	return 0;
 }
 
+
+
 int main(int argv, char** argc)
 {
 	MainMemory* m = (MainMemory*)MemAlloc(sizeof(MainMemory));
 	uint32_t poolSize = Gibibytes(1);
 
-
-	ThreadInfo threadInfo[8];
-	HANDLE semaphoreHandle = CreateSemaphoreEx(nullptr, 
+	WorkQueue workQueue = {};
+	ThreadInfo threadInfo[7];
+	workQueue.semaphoreHandle = CreateSemaphoreEx(nullptr, 
 		ArrayCount(threadInfo), 
 		ArrayCount(threadInfo), 
 		0, 0,
@@ -130,40 +172,43 @@ int main(int argv, char** argc)
 	{
 		ThreadInfo* info = threadInfo + i;
 		info->logicalThreadIndex = i;
-		info->semaphoreHandle = semaphoreHandle;
+		info->workQueue = &workQueue;
 		DWORD threadID;
 		HANDLE threadHandle = CreateThread(nullptr, 0, ThreadProc, info, 0, &threadID);
 		CloseHandle(threadHandle); //releases handle, but not the thread
 	}
 
 
-	PushString(semaphoreHandle, "string 0");
-	PushString(semaphoreHandle, "string 1");
-	PushString(semaphoreHandle, "string 2");
-	PushString(semaphoreHandle, "string 3");
-	PushString(semaphoreHandle, "string 4");
-	PushString(semaphoreHandle, "string 5");
-	PushString(semaphoreHandle, "string 6");
-	PushString(semaphoreHandle, "string 7");
-	PushString(semaphoreHandle, "string 8");
-	PushString(semaphoreHandle, "string 9");
-	PushString(semaphoreHandle, "string 10");
+	PushString(&workQueue, "string 0");
+	PushString(&workQueue, "string 1");
+	PushString(&workQueue, "string 2");
+	PushString(&workQueue, "string 3");
+	PushString(&workQueue, "string 4");
+	PushString(&workQueue, "string 5");
+	PushString(&workQueue, "string 6");
+	PushString(&workQueue, "string 7");
+	PushString(&workQueue, "string 8");
+	PushString(&workQueue, "string 9");
+	PushString(&workQueue, "string 10");
 
 	Sleep(1000);
 
-	PushString(semaphoreHandle, "string 0a");
-	PushString(semaphoreHandle, "string 1a");
-	PushString(semaphoreHandle, "string 2a");
-	PushString(semaphoreHandle, "string 3a");
-	PushString(semaphoreHandle, "string 4a");
-	PushString(semaphoreHandle, "string 5a");
-	PushString(semaphoreHandle, "string 6a");
-	PushString(semaphoreHandle, "string 7a");
-	PushString(semaphoreHandle, "string 8a");
-	PushString(semaphoreHandle, "string 9a");
-	PushString(semaphoreHandle, "string 10a");
+	PushString(&workQueue, "string 0a");
+	PushString(&workQueue, "string 1a");
+	PushString(&workQueue, "string 2a");
+	PushString(&workQueue, "string 3a");
+	PushString(&workQueue, "string 4a");
+	PushString(&workQueue, "string 5a");
+	PushString(&workQueue, "string 6a");
+	PushString(&workQueue, "string 7a");
+	PushString(&workQueue, "string 8a");
+	PushString(&workQueue, "string 9a");
+	PushString(&workQueue, "string 10a");
 
-	while (entryCount != entryCompletionCount);
+	while (QueueWorkStillExists(&workQueue))
+	{
+		DoThreadWork(&workQueue, 7);
+	};
 
     Init(m, MemAlloc(poolSize), poolSize);
     while (m->input.running)
