@@ -20,7 +20,8 @@ static const uint32_t VERTEX_BUFFER_BIND_ID = 0;
 static const float CAMERA_SPEED = 0.001f;
 #define VALIDATION_LAYERS false
 #define VALIDATION_MESSAGES false
-#define DEBUGGING false
+#define INTERNAL_DEBUG true //developer only debugging tools etc
+static const uint32_t EXTERNAL_DEBUG = true; //debugging for release for logs etc
 
 static const uint32_t SMALLPOOLPAGESIZE = 256;
 static const uint32_t MEDIUMPOOLPAGESIZE = Kibibytes(1);

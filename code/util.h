@@ -46,7 +46,7 @@ inline void Message(double message)
 //the message is printed out and execution halts using std::cin rather than abort() or nullptr errors
 inline void Assert(bool test, std::string message)
 {
-#if DEBUGGING
+#if INTERNAL_DEBUG
 	char x;
 	if (test == false)
 	{

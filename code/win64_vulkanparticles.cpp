@@ -20,6 +20,13 @@ void* MemAlloc(uint32_t memorySize)
 	return memory;
 }
 
+void* MemAlloc(HANDLE privateHeap, uint32_t memorySize)
+{
+	void* memory = HeapAlloc(privateHeap, HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, memorySize);
+	Assert(memory, "could not allocate memory");
+	return memory;
+}
+
 void MemFree(void* memory)
 {
 	VirtualFree(memory, 0, MEM_RELEASE);
@@ -153,12 +160,49 @@ DWORD WINAPI ThreadProc(LPVOID lp)
 	return 0;
 }
 
+int32_t CountHeapEntries(HANDLE heap)
+{
+	bool result = HeapLock(heap);
+	Assert(result, "could not lock heap");
+	PROCESS_HEAP_ENTRY heapEntry = {};
+
+	int32_t numLeaks = -1;
+	do
+	{
+		result = HeapWalk(heap, &heapEntry);
+		Assert(result, "MEMORY LEAK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		numLeaks++;
+	} while (GetLastError() == ERROR_NO_MORE_ITEMS);
+
+	result = HeapUnlock(heap);
+	Assert(result, "could not unlock heap");
+
+	return numLeaks;
+}
 
 
 int main(int argv, char** argc)
 {
-	MainMemory* m = (MainMemory*)MemAlloc(sizeof(MainMemory));
+
 	uint32_t poolSize = Gibibytes(1);
+#if INTERNAL_DEBUG
+	
+	HANDLE defaultHeaps[5];
+	uint32_t numDefaultHeapEntries[5];
+	uint32_t actualNumHeaps = GetProcessHeaps(5, defaultHeaps);
+	for (uint32_t i = 0; i < actualNumHeaps; i++)
+	{
+		numDefaultHeapEntries[i] = CountHeapEntries(defaultHeaps[i]);
+	}
+
+	//create a private heap for the process, which makes it possible to find any memory leaks at the end of the process
+	//this is because the default heaps are not guaranteed to be empty 
+	HANDLE privateHeap = HeapCreate(HEAP_GENERATE_EXCEPTIONS, poolSize + Kibibytes(1), 0); // due to overhead there must be some extra space in the heap, itll add more space to match page file size but just to make sure...
+	Assert(privateHeap != nullptr, "could not create private heap");
+	MainMemory* m = (MainMemory*)MemAlloc(privateHeap, sizeof(MainMemory));
+#else
+	MainMemory* m = (MainMemory*)MemAlloc(sizeof(MainMemory));
+#endif
 
 	WorkQueue workQueue = {};
 	ThreadInfo threadInfo[7];
@@ -218,7 +262,7 @@ int main(int argv, char** argc)
 		Update(m);
         Render(&m->deviceInfo, &m->swapchainInfo);
 		Tock(&m->timerInfo);
-#if DEBUGGING || VALIDATION_MESSAGES || VALIDATION_LAYERS
+#if INTERNAL_DEBUG || VALIDATION_MESSAGES || VALIDATION_LAYERS
 		Sleep(&m->timerInfo, 15);
 #else
 		Sleep(&m->timerInfo, 60);
@@ -226,6 +270,30 @@ int main(int argv, char** argc)
     }
     Quit(m);
 	MemFree(m);
+#if INTERNAL_DEBUG
+
+	int* leak = new int(1000);
+	for (uint32_t i = 0; i < actualNumHeaps; i++)
+	{
+		
+		if(numDefaultHeapEntries[i] < CountHeapEntries(defaultHeaps[i]))
+		{
+			//TODO logging
+			Message("heap: " + std::to_string(i) + "has a higher entry count than startup, possible leak");
+
+		} else if (numDefaultHeapEntries[i] > CountHeapEntries(defaultHeaps[i]))
+		{
+			Message("heap: " + std::to_string(i) + "has a lower entry count than startup..... odd");
+		}
+	}
+
+	int32_t numLeaks = CountHeapEntries(privateHeap);
+
+	Assert(numLeaks <= 0, "MEMORY LEAKS!!!!!!!!!!!!!!!!!!!!!!!!");
+	bool result = HeapDestroy(privateHeap);
+	Assert(result, "could not destroy heap");
+#endif
+
     return 0;
 }
 

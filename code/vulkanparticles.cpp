@@ -74,7 +74,7 @@ void* AllocFromPool(PoolInfo* poolInfo, const uint32_t dataSize)
 	PoolInfo pool;
 
 	
-#if DEBUGGING
+#if INTERNAL_DEBUG
 	//when debugging, the memory pool will have a small buffer at each and which will be set to zero
 	//and periodically will be checked if anything has written to it
 	pool.totalPoolSize = poolSize * 3/4; 
@@ -414,7 +414,7 @@ void Init(MainMemory* m, void* poolStart, uint32_t poolSize)
 	m->camera = NewCamera();
 	m->timerInfo = NewTimerInfo();
 
-	m->windowInfo = NewWindowInfo("VulkanParticles", &m->input, 1200, 800, false);
+	m->windowInfo = NewWindowInfo("VulkanParticles", &m->input, 1200, 800, true);
 	m->input = NewInputInfo(&m->windowInfo);
 	//ShowWindow(m->windowHandle, SW_HIDE);
 
@@ -543,7 +543,7 @@ void Update(MainMemory* m)
 
 
 	float speed = CAMERA_SPEED * m->timerInfo.frameTimeMilliSec;
-#if DEBUGGING | VALIDATION_MESSAGES | VALIDATION_LAYERS
+#if INTERNAL_DEBUG | VALIDATION_MESSAGES | VALIDATION_LAYERS
 	speed /= 30;
 #endif
 	if (input.keys[keyW])
